@@ -4,7 +4,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 02: Editor Chrome — complete
+- Feature 03: Auth — complete
 
 ## Current Goal
 
@@ -12,6 +12,13 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- Feature 03: Auth
+  - `ClerkProvider` wraps root layout with `@clerk/ui` bundled, dark theme from `@clerk/ui/themes`, CSS variable overrides
+  - `proxy.ts` at root — protected-first middleware, public routes: `/sign-in`, `/sign-up`
+  - `/sign-in/[[...sign-in]]` and `/sign-up/[[...sign-up]]` — two-panel layout (left panel hidden on mobile)
+  - `/` redirects authenticated → `/editor`, unauthenticated → `/sign-in`
+  - `UserButton` added to editor navbar right section
+  - TypeScript: zero errors, `npm run build` passes
 - Feature 02: Editor Chrome
   - `EditorNavbar`: fixed h-12 top bar, sidebar toggle with PanelLeftOpen/PanelLeftClose, bg-surface + bottom border
   - `ProjectSidebar`: fixed overlay, slides from left, Projects header + close, Tabs (My Projects/Shared), New Project button
@@ -32,7 +39,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 03 (next feature spec)
+- Feature 04 (next feature spec)
 
 ## Open Questions
 
