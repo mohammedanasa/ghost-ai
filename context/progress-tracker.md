@@ -4,7 +4,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 01: Design System — complete
+- Feature 02: Editor Chrome — complete
 
 ## Current Goal
 
@@ -12,6 +12,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- Feature 02: Editor Chrome
+  - `EditorNavbar`: fixed h-12 top bar, sidebar toggle with PanelLeftOpen/PanelLeftClose, bg-surface + bottom border
+  - `ProjectSidebar`: fixed overlay, slides from left, Projects header + close, Tabs (My Projects/Shared), New Project button
+  - Dialog pattern: existing `components/ui/dialog.tsx` already supports title, description, and footer actions — ready for use
+  - TypeScript: zero errors
 - Feature 01: Design System
   - shadcn/ui initialized (style: base-nova, Tailwind v4, RSC, TSX)
   - Components added: Button, Card, Dialog, Input, Tabs, Textarea, ScrollArea → `components/ui/`
@@ -27,7 +32,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 02 (next feature spec)
+- Feature 03 (next feature spec)
 
 ## Open Questions
 
