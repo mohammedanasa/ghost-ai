@@ -1,20 +1,31 @@
 "use client"
 
 import { useState } from "react"
+import { usePathname } from "next/navigation"
 import { EditorNavbar } from "./editor-navbar"
 import { ProjectSidebar } from "./project-sidebar"
 import { ProjectDialogsContext } from "./project-dialogs-context"
-import { useProjectDialogs } from "@/hooks/use-project-dialogs"
+import { useProjectActions } from "@/hooks/use-project-actions"
 import { CreateProjectDialog } from "./dialogs/create-project-dialog"
 import { RenameProjectDialog } from "./dialogs/rename-project-dialog"
 import { DeleteProjectDialog } from "./dialogs/delete-project-dialog"
+import type { ProjectData } from "@/lib/projects"
 
-export function EditorChrome({ children }: { children: React.ReactNode }) {
+interface EditorChromeProps {
+  children: React.ReactNode
+  ownedProjects: ProjectData[]
+  sharedProjects: ProjectData[]
+}
+
+export function EditorChrome({ children, ownedProjects, sharedProjects }: EditorChromeProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const dialogs = useProjectDialogs()
+  const pathname = usePathname()
+  const segments = pathname.split('/')
+  const activeProjectId = segments.length >= 3 && segments[2] ? segments[2] : undefined
+  const actions = useProjectActions(activeProjectId)
 
   return (
-    <ProjectDialogsContext.Provider value={{ openCreate: dialogs.openCreate }}>
+    <ProjectDialogsContext.Provider value={{ openCreate: actions.openCreate }}>
       <div className="flex h-screen flex-col bg-base overflow-hidden">
         <EditorNavbar
           isSidebarOpen={isSidebarOpen}
@@ -24,31 +35,40 @@ export function EditorChrome({ children }: { children: React.ReactNode }) {
           <ProjectSidebar
             isOpen={isSidebarOpen}
             onClose={() => setIsSidebarOpen(false)}
-            onOpenCreate={dialogs.openCreate}
-            onOpenRename={dialogs.openRename}
-            onOpenDelete={dialogs.openDelete}
+            onOpenCreate={actions.openCreate}
+            onOpenRename={actions.openRename}
+            onOpenDelete={actions.openDelete}
+            ownedProjects={ownedProjects}
+            sharedProjects={sharedProjects}
           />
           {children}
         </div>
       </div>
 
       <CreateProjectDialog
-        open={dialogs.openDialog === "create"}
-        name={dialogs.formName}
-        onNameChange={dialogs.setFormName}
-        onClose={dialogs.close}
+        open={actions.openDialog === "create"}
+        name={actions.formName}
+        roomIdPreview={actions.roomIdPreview}
+        onNameChange={actions.setFormName}
+        onClose={actions.close}
+        onSubmit={actions.submitCreate}
+        isLoading={actions.isLoading}
       />
       <RenameProjectDialog
-        open={dialogs.openDialog === "rename"}
-        currentName={dialogs.target?.name ?? ""}
-        name={dialogs.formName}
-        onNameChange={dialogs.setFormName}
-        onClose={dialogs.close}
+        open={actions.openDialog === "rename"}
+        currentName={actions.target?.name ?? ""}
+        name={actions.formName}
+        onNameChange={actions.setFormName}
+        onClose={actions.close}
+        onSubmit={actions.submitRename}
+        isLoading={actions.isLoading}
       />
       <DeleteProjectDialog
-        open={dialogs.openDialog === "delete"}
-        projectName={dialogs.target?.name ?? ""}
-        onClose={dialogs.close}
+        open={actions.openDialog === "delete"}
+        projectName={actions.target?.name ?? ""}
+        onClose={actions.close}
+        onSubmit={actions.submitDelete}
+        isLoading={actions.isLoading}
       />
     </ProjectDialogsContext.Provider>
   )

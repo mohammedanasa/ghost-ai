@@ -12,31 +12,25 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-function toSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-+|-+$/g, "")
-}
-
 interface CreateProjectDialogProps {
   open: boolean
   name: string
+  roomIdPreview: string
   onNameChange: (name: string) => void
   onClose: () => void
+  onSubmit: () => void
+  isLoading: boolean
 }
 
 export function CreateProjectDialog({
   open,
   name,
+  roomIdPreview,
   onNameChange,
   onClose,
+  onSubmit,
+  isLoading,
 }: CreateProjectDialogProps) {
-  const slug = toSlug(name)
-
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
       <DialogContent showCloseButton={false}>
@@ -49,18 +43,21 @@ export function CreateProjectDialog({
             placeholder="Project name"
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter" && name.trim()) onSubmit() }}
             autoFocus
           />
           <p className="text-xs text-copy-muted px-0.5">
-            Slug:{" "}
+            Room ID:{" "}
             <span className="text-copy-secondary">
-              {slug || "your-project-slug"}
+              {roomIdPreview || "your-project-room-id"}
             </span>
           </p>
         </div>
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-          <Button disabled={!name.trim()}>Create</Button>
+          <Button disabled={!name.trim() || isLoading} onClick={onSubmit}>
+            {isLoading ? "Creating…" : "Create"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

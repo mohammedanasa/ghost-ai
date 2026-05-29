@@ -15,12 +15,16 @@ interface DeleteProjectDialogProps {
   open: boolean
   projectName: string
   onClose: () => void
+  onSubmit: () => void
+  isLoading: boolean
 }
 
 export function DeleteProjectDialog({
   open,
   projectName,
   onClose,
+  onSubmit,
+  isLoading,
 }: DeleteProjectDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
@@ -34,7 +38,9 @@ export function DeleteProjectDialog({
         </DialogHeader>
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-          <Button variant="destructive">Delete</Button>
+          <Button variant="destructive" disabled={isLoading} onClick={onSubmit}>
+            {isLoading ? "Deleting…" : "Delete"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

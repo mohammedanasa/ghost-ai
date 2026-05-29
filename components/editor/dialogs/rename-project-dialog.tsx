@@ -18,6 +18,8 @@ interface RenameProjectDialogProps {
   name: string
   onNameChange: (name: string) => void
   onClose: () => void
+  onSubmit: () => void
+  isLoading: boolean
 }
 
 export function RenameProjectDialog({
@@ -26,6 +28,8 @@ export function RenameProjectDialog({
   name,
   onNameChange,
   onClose,
+  onSubmit,
+  isLoading,
 }: RenameProjectDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
@@ -40,12 +44,14 @@ export function RenameProjectDialog({
           placeholder="New project name"
           value={name}
           onChange={(e) => onNameChange(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter" && name.trim()) onClose() }}
+          onKeyDown={(e) => { if (e.key === "Enter" && name.trim()) onSubmit() }}
           autoFocus
         />
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-          <Button disabled={!name.trim()}>Save</Button>
+          <Button disabled={!name.trim() || isLoading} onClick={onSubmit}>
+            {isLoading ? "Saving…" : "Save"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

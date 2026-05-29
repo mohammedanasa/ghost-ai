@@ -4,7 +4,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 05: Prisma Schema And Data Layer — complete
+- Feature 06: Project APIs — complete
 
 ## Current Goal
 
@@ -12,6 +12,21 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- Feature 07: Wire Editor Home
+  - `lib/projects.ts` — `getOwnedProjects` + `getSharedProjects` server-side data helpers
+  - `hooks/use-project-actions.ts` — unified hook: dialog state, room ID preview (slug+suffix), create/rename/delete mutations with `useRouter` navigation
+  - `app/editor/layout.tsx` — async server component, fetches owned+shared projects via Clerk `auth()`/`currentUser()`, passes to `EditorChrome`
+  - `app/editor/page.tsx` — converted to server component; "New Project" button extracted to `components/editor/new-project-button.tsx`
+  - `EditorChrome` — accepts `ProjectData[]` props, uses `useProjectActions`, extracts active project ID from `usePathname`
+  - `ProjectSidebar` — real project data from props; owned items show Pencil/Trash, shared items have no actions
+  - All three dialog components wired with `onSubmit` + `isLoading`; create dialog shows Room ID preview
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 06: Project APIs
+  - `app/api/projects/route.ts` — GET (list owner's projects), POST (create, default name `Untitled Project`)
+  - `app/api/projects/[projectId]/route.ts` — PATCH (rename, owner-only), DELETE (owner-only, 204)
+  - `lib/prisma.ts` — fixed union type; `prisma` now exports as `PrismaClient` with `as unknown as PrismaClient` cast for Accelerate branch
+  - Auth: 401 for unauthenticated, 403 for non-owner mutations
+  - TypeScript: zero errors, `npm run build` passes
 - Feature 05: Prisma Schema And Data Layer
   - `prisma/models/project.prisma` — `Project` + `ProjectCollaborator` models with correct relations, indexes, cascade delete
   - `lib/prisma.ts` — cached singleton branching on `prisma+postgres://` (Accelerate) vs direct `@prisma/adapter-pg`
@@ -53,7 +68,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 05 (next feature spec)
+- Feature 08 (next feature spec)
 
 ## Open Questions
 
