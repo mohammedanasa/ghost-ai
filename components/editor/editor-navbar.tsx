@@ -33,9 +33,12 @@ export function EditorNavbar({
           )}
         </Button>
         {workspaceTitle && (
-          <span className="text-sm font-medium text-copy-primary truncate max-w-xs">
-            {workspaceTitle}
-          </span>
+          <div className="flex flex-col justify-center">
+            <span className="text-sm font-medium text-copy-primary truncate max-w-xs leading-tight">
+              {workspaceTitle}
+            </span>
+            <span className="text-xs text-copy-muted leading-tight">Workspace</span>
+          </div>
         )}
       </div>
 

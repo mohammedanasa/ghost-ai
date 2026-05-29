@@ -4,7 +4,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 09: Share Dialog — complete
+- Feature 12: Shape Panel — complete
 
 ## Current Goal
 
@@ -12,6 +12,24 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- Feature 12: Shape Panel
+  - `types/canvas.ts` — extended `NodeShape` to all 6 shapes + `NODE_COLORS` (8 pairs) + `DEFAULT_NODE_COLOR` + `NODE_SHAPES` (defaults per shape) + `ShapeDragPayload`
+  - `components/editor/canvas-node.tsx` — `CanvasNodeComponent`: bordered rectangle renderer with centered label, 4 handles; `canvasNodeTypes` map
+  - `components/editor/shape-panel.tsx` — floating pill toolbar with draggable buttons for all 6 shapes; drag payload includes shape + default size
+  - `components/editor/canvas-flow.tsx` — registers `canvasNodeTypes`, `onInit` captures React Flow instance; `dragover`/`drop` handlers convert screen coords → flow position and create new nodes with shape payload; `ShapePanel` via React Flow `Panel`
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 11: Base Canvas
+  - `types/canvas.ts` — `CanvasNodeData` (label, color, shape) + `CanvasNode` / `CanvasEdge` custom types
+  - `components/editor/canvas-room.tsx` — `LiveblocksProvider` + `RoomProvider` + `ErrorBoundary` + `ClientSideSuspense`
+  - `components/editor/canvas-flow.tsx` — `useLiveblocksFlow` (suspense) wired to `ReactFlow` with `MiniMap`, dot `Background`, `Cursors`, `fitView`, loose connections
+  - `WorkspaceChrome` updated to accept `roomId` and render `CanvasRoom`
+  - `app/editor/[roomId]/page.tsx` passes `roomId` to `WorkspaceChrome`
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 10: Liveblocks Setup
+  - `liveblocks.config.ts` — Presence (cursor, isThinking) + UserMeta (name, avatar, color) types
+  - `lib/liveblocks.ts` — lazy-cached node client (`getLiveblocks()`) + deterministic cursor color helper
+  - `app/api/liveblocks-auth/route.ts` — POST: Clerk auth, project access check, `getOrCreateRoom`, ID token
+  - TypeScript: zero errors, `npm run build` passes
 - Feature 09: Share Dialog
   - `app/api/projects/[projectId]/collaborators/route.ts` — GET (list, Clerk-enriched), POST (invite, owner-only)
   - `app/api/projects/[projectId]/collaborators/[collaboratorId]/route.ts` — DELETE (owner-only)
@@ -84,7 +102,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 10 (next feature spec)
+- Feature 13 (next feature spec)
 
 ## Open Questions
 
