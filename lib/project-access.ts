@@ -5,7 +5,8 @@ export async function getCurrentIdentity(): Promise<{ userId: string; email: str
   const { userId } = await auth()
   if (!userId) return null
   const user = await currentUser()
-  const email = user?.emailAddresses[0]?.emailAddress ?? ''
+  const email = user?.emailAddresses[0]?.emailAddress
+  if (!email) return null
   return { userId, email }
 }
 
@@ -13,7 +14,7 @@ export async function getAccessibleProject(
   projectId: string,
   userId: string,
   email: string,
-): Promise<{ id: string; name: string } | null> {
+): Promise<{ id: string; name: string; isOwner: boolean } | null> {
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     select: {
@@ -27,6 +28,7 @@ export async function getAccessibleProject(
     },
   })
   if (!project) return null
-  if (project.ownerId !== userId && project.collaborators.length === 0) return null
-  return { id: project.id, name: project.name }
+  const isOwner = project.ownerId === userId
+  if (!isOwner && project.collaborators.length === 0) return null
+  return { id: project.id, name: project.name, isOwner }
 }

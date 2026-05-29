@@ -4,16 +4,22 @@ import { useEffect } from "react"
 import { useWorkspace } from "./workspace-context"
 
 interface WorkspaceChromeProps {
+  projectId: string
   projectName: string
+  isOwner: boolean
 }
 
-export function WorkspaceChrome({ projectName }: WorkspaceChromeProps) {
-  const { setWorkspaceTitle, isAISidebarOpen } = useWorkspace()
+export function WorkspaceChrome({ projectId, projectName, isOwner }: WorkspaceChromeProps) {
+  const { setWorkspaceTitle, setWorkspaceProject, isAISidebarOpen } = useWorkspace()
 
   useEffect(() => {
     setWorkspaceTitle(projectName)
-    return () => setWorkspaceTitle(null)
-  }, [projectName, setWorkspaceTitle])
+    setWorkspaceProject({ id: projectId, isOwner })
+    return () => {
+      setWorkspaceTitle(null)
+      setWorkspaceProject(null)
+    }
+  }, [projectId, projectName, isOwner, setWorkspaceTitle, setWorkspaceProject])
 
   return (
     <div className="relative h-full min-h-0">

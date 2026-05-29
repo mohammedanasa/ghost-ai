@@ -10,6 +10,8 @@ import { useProjectActions } from "@/hooks/use-project-actions"
 import { CreateProjectDialog } from "./dialogs/create-project-dialog"
 import { RenameProjectDialog } from "./dialogs/rename-project-dialog"
 import { DeleteProjectDialog } from "./dialogs/delete-project-dialog"
+import { ShareDialog } from "./share-dialog"
+import type { WorkspaceProject } from "./workspace-context"
 import type { ProjectData } from "@/lib/projects"
 
 interface EditorChromeProps {
@@ -21,7 +23,9 @@ interface EditorChromeProps {
 export function EditorChrome({ children, ownedProjects, sharedProjects }: EditorChromeProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [workspaceTitle, setWorkspaceTitle] = useState<string | null>(null)
+  const [workspaceProject, setWorkspaceProject] = useState<WorkspaceProject | null>(null)
   const [isAISidebarOpen, setIsAISidebarOpen] = useState(false)
+  const [isShareOpen, setIsShareOpen] = useState(false)
   const pathname = usePathname()
   const segments = pathname.split('/')
   const activeProjectId = segments.length >= 3 && segments[2] ? segments[2] : undefined
@@ -31,6 +35,7 @@ export function EditorChrome({ children, ownedProjects, sharedProjects }: Editor
     <WorkspaceContext.Provider
       value={{
         setWorkspaceTitle,
+        setWorkspaceProject,
         isAISidebarOpen,
         toggleAISidebar: () => setIsAISidebarOpen((prev) => !prev),
       }}
@@ -43,6 +48,7 @@ export function EditorChrome({ children, ownedProjects, sharedProjects }: Editor
           workspaceTitle={workspaceTitle}
           isAISidebarOpen={isAISidebarOpen}
           onToggleAISidebar={() => setIsAISidebarOpen((prev) => !prev)}
+          onShare={() => setIsShareOpen(true)}
         />
         <div className="relative flex-1 min-h-0">
           <ProjectSidebar
@@ -84,6 +90,14 @@ export function EditorChrome({ children, ownedProjects, sharedProjects }: Editor
         onSubmit={actions.submitDelete}
         isLoading={actions.isLoading}
       />
+      {workspaceProject && (
+        <ShareDialog
+          projectId={workspaceProject.id}
+          isOwner={workspaceProject.isOwner}
+          open={isShareOpen}
+          onClose={() => setIsShareOpen(false)}
+        />
+      )}
     </ProjectDialogsContext.Provider>
     </WorkspaceContext.Provider>
   )

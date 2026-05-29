@@ -6,7 +6,7 @@ export default function SignInPage() {
     <div className="min-h-screen bg-base flex">
       <AuthLeftPanel />
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-        <SignIn />
+        <SignIn forceRedirectUrl="/editor" />
       </div>
     </div>
   );

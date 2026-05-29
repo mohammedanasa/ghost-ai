@@ -15,5 +15,11 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
   const project = await getAccessibleProject(roomId, identity.userId, identity.email)
   if (!project) return <AccessDenied />
 
-  return <WorkspaceChrome projectName={project.name} />
+  return (
+    <WorkspaceChrome
+      projectId={project.id}
+      projectName={project.name}
+      isOwner={project.isOwner}
+    />
+  )
 }

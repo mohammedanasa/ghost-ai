@@ -6,7 +6,7 @@ export default function SignUpPage() {
     <div className="min-h-screen bg-base flex">
       <AuthLeftPanel />
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-        <SignUp />
+        <SignUp forceRedirectUrl="/editor" />
       </div>
     </div>
   );

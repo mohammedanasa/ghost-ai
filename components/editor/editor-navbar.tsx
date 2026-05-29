@@ -11,6 +11,7 @@ interface EditorNavbarProps {
   workspaceTitle?: string | null
   isAISidebarOpen?: boolean
   onToggleAISidebar?: () => void
+  onShare?: () => void
 }
 
 export function EditorNavbar({
@@ -19,6 +20,7 @@ export function EditorNavbar({
   workspaceTitle,
   isAISidebarOpen,
   onToggleAISidebar,
+  onShare,
 }: EditorNavbarProps) {
   return (
     <header className="h-12 flex items-center justify-between px-3 bg-surface border-b border-border-default shrink-0">
@@ -40,7 +42,7 @@ export function EditorNavbar({
       <div className="flex items-center gap-1">
         {workspaceTitle && (
           <>
-            <Button variant="outline" size="sm" className="gap-2 mr-1" disabled>
+            <Button variant="outline" size="sm" className="gap-2 mr-1" onClick={onShare}>
               <Share2 className="h-4 w-4" />
               Share
             </Button>
