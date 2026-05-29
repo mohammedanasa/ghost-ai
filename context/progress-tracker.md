@@ -4,7 +4,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 06: Project APIs — complete
+- Feature 09: Share Dialog — complete
 
 ## Current Goal
 
@@ -12,6 +12,22 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- Feature 09: Share Dialog
+  - `app/api/projects/[projectId]/collaborators/route.ts` — GET (list, Clerk-enriched), POST (invite, owner-only)
+  - `app/api/projects/[projectId]/collaborators/[collaboratorId]/route.ts` — DELETE (owner-only)
+  - `components/editor/share-dialog.tsx` — invite/remove/copy-link, owner vs collaborator views
+  - `lib/project-access.ts` — `getAccessibleProject` now returns `isOwner`
+  - `WorkspaceContext` extended with `setWorkspaceProject`; `WorkspaceChrome` sets it on mount
+  - Share button in `EditorNavbar` wired; `EditorChrome` manages share dialog state
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 08: Editor Workspace Shell
+  - `lib/project-access.ts` — `getCurrentIdentity` + `getAccessibleProject` helpers
+  - `components/editor/access-denied.tsx` — centered lock icon + message + back link
+  - `app/editor/[roomId]/page.tsx` — server component: auth redirect, access check, workspace layout
+  - `components/editor/workspace-chrome.tsx` — client component: workspace navbar (project name, share, AI toggle), canvas placeholder, AI sidebar placeholder
+  - `components/editor/project-sidebar.tsx` — active project highlighting + Link navigation
+  - `components/editor/editor-chrome.tsx` — passes `activeProjectId` to `ProjectSidebar`
+  - TypeScript: zero errors, `npm run build` passes
 - Feature 07: Wire Editor Home
   - `lib/projects.ts` — `getOwnedProjects` + `getSharedProjects` server-side data helpers
   - `hooks/use-project-actions.ts` — unified hook: dialog state, room ID preview (slug+suffix), create/rename/delete mutations with `useRouter` navigation
@@ -68,7 +84,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 08 (next feature spec)
+- Feature 10 (next feature spec)
 
 ## Open Questions
 

@@ -1,22 +1,46 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { Plus, X, Pencil, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { cn } from "@/lib/utils"
 import type { DialogTarget } from "@/hooks/use-project-actions"
 import type { ProjectData } from "@/lib/projects"
 
 interface ProjectItemProps {
   project: ProjectData
   isOwned: boolean
+  isActive: boolean
   onRename: (target: DialogTarget) => void
   onDelete: (target: DialogTarget) => void
 }
 
-function ProjectItem({ project, isOwned, onRename, onDelete }: ProjectItemProps) {
+function ProjectItem({ project, isOwned, isActive, onRename, onDelete }: ProjectItemProps) {
+  const router = useRouter()
+
   return (
-    <div className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-subtle cursor-pointer">
-      <span className="flex-1 text-sm text-copy-secondary truncate">
+    <div
+      role="button"
+      tabIndex={0}
+      className={cn(
+        "group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-subtle cursor-pointer",
+        isActive && "bg-brand-dim",
+      )}
+      onClick={() => router.push(`/editor/${project.id}`)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          if (e.key === " ") e.preventDefault()
+          router.push(`/editor/${project.id}`)
+        }
+      }}
+    >
+      <span
+        className={cn(
+          "flex-1 text-sm truncate",
+          isActive ? "text-copy-primary" : "text-copy-secondary",
+        )}
+      >
         {project.name}
       </span>
       {isOwned && (
@@ -29,6 +53,12 @@ function ProjectItem({ project, isOwned, onRename, onDelete }: ProjectItemProps)
               e.stopPropagation()
               onRename({ id: project.id, name: project.name })
             }}
+            onKeyDown={(e) => {
+              e.stopPropagation()
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault()
+              }
+            }}
           >
             <Pencil className="h-3 w-3 text-copy-muted" />
           </Button>
@@ -39,6 +69,12 @@ function ProjectItem({ project, isOwned, onRename, onDelete }: ProjectItemProps)
             onClick={(e) => {
               e.stopPropagation()
               onDelete({ id: project.id, name: project.name })
+            }}
+            onKeyDown={(e) => {
+              e.stopPropagation()
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault()
+              }
             }}
           >
             <Trash2 className="h-3 w-3 text-copy-muted" />
@@ -57,6 +93,7 @@ interface ProjectSidebarProps {
   onOpenDelete: (target: DialogTarget) => void
   ownedProjects: ProjectData[]
   sharedProjects: ProjectData[]
+  activeProjectId?: string
 }
 
 export function ProjectSidebar({
@@ -67,6 +104,7 @@ export function ProjectSidebar({
   onOpenDelete,
   ownedProjects,
   sharedProjects,
+  activeProjectId,
 }: ProjectSidebarProps) {
   return (
     <>
@@ -116,6 +154,7 @@ export function ProjectSidebar({
                       key={project.id}
                       project={project}
                       isOwned={true}
+                      isActive={project.id === activeProjectId}
                       onRename={onOpenRename}
                       onDelete={onOpenDelete}
                     />
@@ -136,6 +175,7 @@ export function ProjectSidebar({
                       key={project.id}
                       project={project}
                       isOwned={false}
+                      isActive={project.id === activeProjectId}
                       onRename={onOpenRename}
                       onDelete={onOpenDelete}
                     />

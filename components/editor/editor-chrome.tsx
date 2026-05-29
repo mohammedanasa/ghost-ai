@@ -5,10 +5,13 @@ import { usePathname } from "next/navigation"
 import { EditorNavbar } from "./editor-navbar"
 import { ProjectSidebar } from "./project-sidebar"
 import { ProjectDialogsContext } from "./project-dialogs-context"
+import { WorkspaceContext } from "./workspace-context"
 import { useProjectActions } from "@/hooks/use-project-actions"
 import { CreateProjectDialog } from "./dialogs/create-project-dialog"
 import { RenameProjectDialog } from "./dialogs/rename-project-dialog"
 import { DeleteProjectDialog } from "./dialogs/delete-project-dialog"
+import { ShareDialog } from "./share-dialog"
+import type { WorkspaceProject } from "./workspace-context"
 import type { ProjectData } from "@/lib/projects"
 
 interface EditorChromeProps {
@@ -19,17 +22,33 @@ interface EditorChromeProps {
 
 export function EditorChrome({ children, ownedProjects, sharedProjects }: EditorChromeProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [workspaceTitle, setWorkspaceTitle] = useState<string | null>(null)
+  const [workspaceProject, setWorkspaceProject] = useState<WorkspaceProject | null>(null)
+  const [isAISidebarOpen, setIsAISidebarOpen] = useState(false)
+  const [isShareOpen, setIsShareOpen] = useState(false)
   const pathname = usePathname()
   const segments = pathname.split('/')
   const activeProjectId = segments.length >= 3 && segments[2] ? segments[2] : undefined
   const actions = useProjectActions(activeProjectId)
 
   return (
+    <WorkspaceContext.Provider
+      value={{
+        setWorkspaceTitle,
+        setWorkspaceProject,
+        isAISidebarOpen,
+        toggleAISidebar: () => setIsAISidebarOpen((prev) => !prev),
+      }}
+    >
     <ProjectDialogsContext.Provider value={{ openCreate: actions.openCreate }}>
       <div className="flex h-screen flex-col bg-base overflow-hidden">
         <EditorNavbar
           isSidebarOpen={isSidebarOpen}
           onSidebarToggle={() => setIsSidebarOpen((prev) => !prev)}
+          workspaceTitle={workspaceTitle}
+          isAISidebarOpen={isAISidebarOpen}
+          onToggleAISidebar={() => setIsAISidebarOpen((prev) => !prev)}
+          onShare={() => setIsShareOpen(true)}
         />
         <div className="relative flex-1 min-h-0">
           <ProjectSidebar
@@ -40,6 +59,7 @@ export function EditorChrome({ children, ownedProjects, sharedProjects }: Editor
             onOpenDelete={actions.openDelete}
             ownedProjects={ownedProjects}
             sharedProjects={sharedProjects}
+            activeProjectId={activeProjectId}
           />
           {children}
         </div>
@@ -70,6 +90,15 @@ export function EditorChrome({ children, ownedProjects, sharedProjects }: Editor
         onSubmit={actions.submitDelete}
         isLoading={actions.isLoading}
       />
+      {workspaceProject && (
+        <ShareDialog
+          projectId={workspaceProject.id}
+          isOwner={workspaceProject.isOwner}
+          open={isShareOpen}
+          onClose={() => setIsShareOpen(false)}
+        />
+      )}
     </ProjectDialogsContext.Provider>
+    </WorkspaceContext.Provider>
   )
 }
