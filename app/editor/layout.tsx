@@ -1,5 +1,23 @@
+import { auth, currentUser } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
 import { EditorChrome } from "@/components/editor/editor-chrome"
+import { getOwnedProjects, getSharedProjects } from "@/lib/projects"
 
-export default function EditorLayout({ children }: { children: React.ReactNode }) {
-  return <EditorChrome>{children}</EditorChrome>
+export default async function EditorLayout({ children }: { children: React.ReactNode }) {
+  const { userId } = await auth()
+  if (!userId) redirect('/sign-in')
+
+  const user = await currentUser()
+  const email = user?.emailAddresses[0]?.emailAddress ?? ''
+
+  const [ownedProjects, sharedProjects] = await Promise.all([
+    getOwnedProjects(userId),
+    getSharedProjects(email),
+  ])
+
+  return (
+    <EditorChrome ownedProjects={ownedProjects} sharedProjects={sharedProjects}>
+      {children}
+    </EditorChrome>
+  )
 }

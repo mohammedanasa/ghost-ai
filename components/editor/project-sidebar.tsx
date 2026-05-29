@@ -3,34 +3,23 @@
 import { Plus, X, Pencil, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import type { DialogTarget } from "@/hooks/use-project-dialogs"
-
-interface MockProject {
-  id: string
-  name: string
-  slug: string
-  isOwned: boolean
-}
-
-const MOCK_PROJECTS: MockProject[] = [
-  { id: "1", name: "Auth Service", slug: "auth-service", isOwned: true },
-  { id: "2", name: "Payment Gateway", slug: "payment-gateway", isOwned: true },
-  { id: "3", name: "Team Canvas", slug: "team-canvas", isOwned: false },
-]
+import type { DialogTarget } from "@/hooks/use-project-actions"
+import type { ProjectData } from "@/lib/projects"
 
 interface ProjectItemProps {
-  project: MockProject
+  project: ProjectData
+  isOwned: boolean
   onRename: (target: DialogTarget) => void
   onDelete: (target: DialogTarget) => void
 }
 
-function ProjectItem({ project, onRename, onDelete }: ProjectItemProps) {
+function ProjectItem({ project, isOwned, onRename, onDelete }: ProjectItemProps) {
   return (
     <div className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-subtle cursor-pointer">
       <span className="flex-1 text-sm text-copy-secondary truncate">
         {project.name}
       </span>
-      {project.isOwned && (
+      {isOwned && (
         <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
           <Button
             variant="ghost"
@@ -66,10 +55,9 @@ interface ProjectSidebarProps {
   onOpenCreate: () => void
   onOpenRename: (target: DialogTarget) => void
   onOpenDelete: (target: DialogTarget) => void
+  ownedProjects: ProjectData[]
+  sharedProjects: ProjectData[]
 }
-
-const ownedProjects = MOCK_PROJECTS.filter((p) => p.isOwned)
-const sharedProjects = MOCK_PROJECTS.filter((p) => !p.isOwned)
 
 export function ProjectSidebar({
   isOpen,
@@ -77,6 +65,8 @@ export function ProjectSidebar({
   onOpenCreate,
   onOpenRename,
   onOpenDelete,
+  ownedProjects,
+  sharedProjects,
 }: ProjectSidebarProps) {
   return (
     <>
@@ -125,6 +115,7 @@ export function ProjectSidebar({
                     <ProjectItem
                       key={project.id}
                       project={project}
+                      isOwned={true}
                       onRename={onOpenRename}
                       onDelete={onOpenDelete}
                     />
@@ -144,6 +135,7 @@ export function ProjectSidebar({
                     <ProjectItem
                       key={project.id}
                       project={project}
+                      isOwned={false}
                       onRename={onOpenRename}
                       onDelete={onOpenDelete}
                     />
