@@ -4,7 +4,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 04: Project Dialogs & Editor Home — complete
+- Feature 05: Prisma Schema And Data Layer — complete
 
 ## Current Goal
 
@@ -12,6 +12,12 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- Feature 05: Prisma Schema And Data Layer
+  - `prisma/models/project.prisma` — `Project` + `ProjectCollaborator` models with correct relations, indexes, cascade delete
+  - `lib/prisma.ts` — cached singleton branching on `prisma+postgres://` (Accelerate) vs direct `@prisma/adapter-pg`
+  - Migration `20260529140255_init` applied to Prisma Postgres
+  - Client generated to `app/generated/prisma/`
+  - TypeScript: zero errors, `npm run build` passes
 - Feature 04: Project Dialogs & Editor Home
   - `useProjectDialogs` hook — owns dialog type, target, form name, loading state
   - `ProjectDialogsContext` — exposes `openCreate` to child routes via context
