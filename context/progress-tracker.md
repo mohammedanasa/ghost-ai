@@ -4,7 +4,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 03: Auth — complete
+- Feature 04: Project Dialogs & Editor Home — complete
 
 ## Current Goal
 
@@ -12,6 +12,14 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- Feature 04: Project Dialogs & Editor Home
+  - `useProjectDialogs` hook — owns dialog type, target, form name, loading state
+  - `ProjectDialogsContext` — exposes `openCreate` to child routes via context
+  - Three dialog components in `components/editor/dialogs/`: Create (with live slug preview), Rename (prefilled + auto-focus + Enter to submit), Delete (destructive confirm)
+  - `EditorChrome` updated: uses hook, provides context, renders dialogs
+  - `ProjectSidebar` updated: mock projects, owned items show Pencil/Trash on hover, shared items have no actions, mobile backdrop scrim
+  - `app/editor/page.tsx`: editor home with heading, description, New Project button wired to create dialog
+  - TypeScript: zero errors, `npm run build` passes
 - Feature 03: Auth
   - `ClerkProvider` wraps root layout with `@clerk/ui` bundled, dark theme from `@clerk/ui/themes`, CSS variable overrides
   - `proxy.ts` at root — protected-first middleware, public routes: `/sign-in`, `/sign-up`
@@ -39,7 +47,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 04 (next feature spec)
+- Feature 05 (next feature spec)
 
 ## Open Questions
 
