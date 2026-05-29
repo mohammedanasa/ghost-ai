@@ -65,12 +65,25 @@ export function ShareDialog({ projectId, isOwner, open, onClose }: ShareDialogPr
         body: JSON.stringify({ email: inviteEmail }),
       })
       if (!res.ok) {
-        const data: { error?: string } = await res.json()
-        setError(data.error ?? "Failed to invite")
+        let errorMessage = "Failed to invite"
+        try {
+          const contentType = res.headers.get("content-type")
+          if (contentType && contentType.includes("application/json")) {
+            const data: { error?: string } = await res.json()
+            errorMessage = data.error ?? errorMessage
+          } else {
+            errorMessage = await res.text() || errorMessage
+          }
+        } catch {
+          // Use default error message
+        }
+        setError(errorMessage)
         return
       }
       setInviteEmail("")
       await fetchCollaborators()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Network error")
     } finally {
       setInviting(false)
     }
@@ -79,19 +92,29 @@ export function ShareDialog({ projectId, isOwner, open, onClose }: ShareDialogPr
   async function handleRemove(collaboratorId: string) {
     setRemovingId(collaboratorId)
     try {
-      await fetch(`/api/projects/${projectId}/collaborators/${collaboratorId}`, {
+      const response = await fetch(`/api/projects/${projectId}/collaborators/${collaboratorId}`, {
         method: "DELETE",
       })
-      setCollaborators((prev) => prev.filter((c) => c.id !== collaboratorId))
+      if (response.ok) {
+        setCollaborators((prev) => prev.filter((c) => c.id !== collaboratorId))
+      } else {
+        console.error("Failed to remove collaborator")
+      }
+    } catch (err) {
+      console.error("Error removing collaborator:", err)
     } finally {
       setRemovingId(null)
     }
   }
 
-  function handleCopyLink() {
-    navigator.clipboard.writeText(`${window.location.origin}/editor/${projectId}`)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  async function handleCopyLink() {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/editor/${projectId}`)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error("Failed to copy link:", err)
+    }
   }
 
   return (

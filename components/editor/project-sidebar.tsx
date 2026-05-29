@@ -28,7 +28,12 @@ function ProjectItem({ project, isOwned, isActive, onRename, onDelete }: Project
         isActive && "bg-brand-dim",
       )}
       onClick={() => router.push(`/editor/${project.id}`)}
-      onKeyDown={(e) => e.key === "Enter" && router.push(`/editor/${project.id}`)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          if (e.key === " ") e.preventDefault()
+          router.push(`/editor/${project.id}`)
+        }
+      }}
     >
       <span
         className={cn(
@@ -48,6 +53,12 @@ function ProjectItem({ project, isOwned, isActive, onRename, onDelete }: Project
               e.stopPropagation()
               onRename({ id: project.id, name: project.name })
             }}
+            onKeyDown={(e) => {
+              e.stopPropagation()
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault()
+              }
+            }}
           >
             <Pencil className="h-3 w-3 text-copy-muted" />
           </Button>
@@ -58,6 +69,12 @@ function ProjectItem({ project, isOwned, isActive, onRename, onDelete }: Project
             onClick={(e) => {
               e.stopPropagation()
               onDelete({ id: project.id, name: project.name })
+            }}
+            onKeyDown={(e) => {
+              e.stopPropagation()
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault()
+              }
             }}
           >
             <Trash2 className="h-3 w-3 text-copy-muted" />
