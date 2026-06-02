@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef } from "react"
 import { usePathname } from "next/navigation"
 import { EditorNavbar } from "./editor-navbar"
 import { ProjectSidebar } from "./project-sidebar"
@@ -12,7 +12,7 @@ import { RenameProjectDialog } from "./dialogs/rename-project-dialog"
 import { DeleteProjectDialog } from "./dialogs/delete-project-dialog"
 import { ShareDialog } from "./share-dialog"
 import { StarterTemplatesModal } from "./starter-templates-modal"
-import type { WorkspaceProject, TemplatePayload } from "./workspace-context"
+import type { WorkspaceProject, TemplatePayload, SaveStatus } from "./workspace-context"
 import type { ProjectData } from "@/lib/projects"
 
 interface EditorChromeProps {
@@ -29,6 +29,12 @@ export function EditorChrome({ children, ownedProjects, sharedProjects }: Editor
   const [isShareOpen, setIsShareOpen] = useState(false)
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false)
   const [pendingTemplateImport, setPendingTemplateImport] = useState<TemplatePayload | null>(null)
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
+  const triggerSaveRef = useRef<(() => void) | null>(null)
+  const setTriggerSave = useCallback((fn: (() => void) | null) => {
+    triggerSaveRef.current = fn
+  }, [])
+  const handleSave = useCallback(() => { triggerSaveRef.current?.() }, [])
   const [localOwnedProjects, setLocalOwnedProjects] = useState(ownedProjects)
   const pathname = usePathname()
   const segments = pathname.split('/')
@@ -55,6 +61,10 @@ export function EditorChrome({ children, ownedProjects, sharedProjects }: Editor
         toggleAISidebar: () => setIsAISidebarOpen((prev) => !prev),
         pendingTemplateImport,
         setPendingTemplateImport,
+        saveStatus,
+        setSaveStatus,
+        workspaceProject,
+        setTriggerSave,
       }}
     >
     <ProjectDialogsContext.Provider value={{ openCreate: actions.openCreate }}>
@@ -67,6 +77,8 @@ export function EditorChrome({ children, ownedProjects, sharedProjects }: Editor
           onToggleAISidebar={() => setIsAISidebarOpen((prev) => !prev)}
           onShare={() => setIsShareOpen(true)}
           onOpenTemplates={() => setIsTemplatesOpen(true)}
+          saveStatus={saveStatus}
+          onSave={handleSave}
         />
         <div className="relative flex-1 min-h-0">
           <ProjectSidebar

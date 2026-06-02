@@ -152,13 +152,9 @@ function CanvasNodeComponent({ id, data, selected }: NodeProps<CanvasNode>) {
   const handles = (
     <>
       <Handle type="source" position={Position.Top} id="top" style={handleStyle} />
-      <Handle type="target" position={Position.Top} id="top-target" style={handleStyle} />
       <Handle type="source" position={Position.Bottom} id="bottom" style={handleStyle} />
-      <Handle type="target" position={Position.Bottom} id="bottom-target" style={handleStyle} />
       <Handle type="source" position={Position.Left} id="left" style={handleStyle} />
-      <Handle type="target" position={Position.Left} id="left-target" style={handleStyle} />
       <Handle type="source" position={Position.Right} id="right" style={handleStyle} />
-      <Handle type="target" position={Position.Right} id="right-target" style={handleStyle} />
     </>
   )
 
