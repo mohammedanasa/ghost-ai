@@ -1,10 +1,9 @@
-import { currentUser } from '@clerk/nextjs/server'
 import { getLiveblocks, getCursorColor } from '@/lib/liveblocks'
-import { getCurrentIdentity, getAccessibleProject } from '@/lib/project-access'
+import { getCurrentIdentityWithUser, getAccessibleProject } from '@/lib/project-access'
 
 export async function POST(request: Request) {
-  const identity = await getCurrentIdentity()
-  if (!identity) {
+  const identityWithUser = await getCurrentIdentityWithUser()
+  if (!identityWithUser) {
     return new Response('Unauthorized', { status: 401 })
   }
 
@@ -13,19 +12,20 @@ export async function POST(request: Request) {
     return new Response('Bad Request', { status: 400 })
   }
 
-  const project = await getAccessibleProject(room, identity.userId, identity.email)
+  const { userId, email, user } = identityWithUser
+
+  const project = await getAccessibleProject(room, userId, email)
   if (!project) {
     return new Response('Forbidden', { status: 403 })
   }
 
-  const user = await currentUser()
   const name =
     user?.fullName ??
     user?.firstName ??
     user?.emailAddresses[0]?.emailAddress ??
     'Anonymous'
   const avatar = user?.imageUrl ?? ''
-  const color = getCursorColor(identity.userId)
+  const color = getCursorColor(userId)
 
   const liveblocks = getLiveblocks()
 
@@ -33,11 +33,11 @@ export async function POST(request: Request) {
     await liveblocks.getOrCreateRoom(room, { defaultAccesses: [] })
 
     await liveblocks.updateRoom(room, {
-      usersAccesses: { [identity.userId]: ['room:write'] },
+      usersAccesses: { [userId]: ['room:write'] },
     })
 
     const { status, body } = await liveblocks.identifyUser(
-      identity.userId,
+      userId,
       { userInfo: { name, avatar, color } },
     )
 

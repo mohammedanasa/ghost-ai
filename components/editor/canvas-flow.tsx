@@ -37,8 +37,20 @@ export function CanvasFlow() {
     e.preventDefault()
     const raw = e.dataTransfer.getData('application/canvas-shape')
     if (!raw || !rfInstanceRef.current) return
+    let payload: ShapeDragPayload
+    try {
+      payload = JSON.parse(raw) as ShapeDragPayload
+    } catch (err) {
+      console.error('[canvas-flow] invalid drop payload, JSON parse failed', err, raw)
+      return
+    }
 
-    const payload = JSON.parse(raw) as ShapeDragPayload
+    // Validate required payload fields
+    if (!payload || typeof payload.shape !== 'string' || typeof payload.width !== 'number' || typeof payload.height !== 'number') {
+      console.error('[canvas-flow] invalid drop payload, missing required fields', payload)
+      return
+    }
+
     const position = rfInstanceRef.current.screenToFlowPosition({ x: e.clientX, y: e.clientY })
 
     nodeCounter++

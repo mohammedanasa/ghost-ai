@@ -28,7 +28,9 @@ declare global {
 
 export function getLiveblocks(): Liveblocks {
   if (globalThis.__liveblocks) return globalThis.__liveblocks
-  const client = new Liveblocks({ secret: process.env.LIVEBLOCKS_SECRET_KEY! })
+  const secret = process.env.LIVEBLOCKS_SECRET_KEY
+  if (!secret) throw new Error('LIVEBLOCKS_SECRET_KEY is required for Liveblocks client')
+  const client = new Liveblocks({ secret })
   if (process.env.NODE_ENV !== 'production') {
     globalThis.__liveblocks = client
   }
