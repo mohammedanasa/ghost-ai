@@ -88,7 +88,7 @@ export function CanvasFlow() {
     setTimeout(() => rfInstanceRef.current?.fitView({ duration: 300 }), 50)
   }, [pendingTemplateImport]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useKeyboardShortcuts({ rfInstance: rfInstanceRef.current, undo, redo })
+  useKeyboardShortcuts({ rfRef: rfInstanceRef, undo, redo })
 
   function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault()

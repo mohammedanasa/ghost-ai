@@ -39,8 +39,14 @@ function n(
   }
 }
 
-function e(id: string, source: string, target: string): CanvasEdge {
-  return { id, type: 'canvasEdge', source, target }
+function e(
+  id: string,
+  source: string,
+  sourceHandle: string,
+  target: string,
+  targetHandle: string,
+): CanvasEdge {
+  return { id, type: 'canvasEdge', source, sourceHandle, target, targetHandle }
 }
 
 const microservices: CanvasTemplate = {
@@ -57,14 +63,14 @@ const microservices: CanvasTemplate = {
     n('bus',      'Message Bus',      380, 340, C.orange, 'cylinder',  120, 70),
   ],
   edges: [
-    e('e1', 'api',      'auth'),
-    e('e2', 'api',      'users'),
-    e('e3', 'api',      'orders'),
-    e('e4', 'api',      'products'),
-    e('e5', 'auth',     'db'),
-    e('e6', 'users',    'db'),
-    e('e7', 'orders',   'bus'),
-    e('e8', 'products', 'bus'),
+    e('e1', 'api',      'bottom', 'auth',     'top-target'),
+    e('e2', 'api',      'bottom', 'users',    'top-target'),
+    e('e3', 'api',      'bottom', 'orders',   'top-target'),
+    e('e4', 'api',      'bottom', 'products', 'top-target'),
+    e('e5', 'auth',     'bottom', 'db',       'top-target'),
+    e('e6', 'users',    'bottom', 'db',       'top-target'),
+    e('e7', 'orders',   'bottom', 'bus',      'top-target'),
+    e('e8', 'products', 'bottom', 'bus',      'top-target'),
   ],
 }
 
@@ -84,12 +90,12 @@ const cicd: CanvasTemplate = {
     n('prod',    'Deploy Prod',    860,  195, C.green,  'rectangle', 125, 55),
   ],
   edges: [
-    e('e1', 'source',  'build'),
-    e('e2', 'build',   'test'),
-    e('e3', 'test',    'scan'),
-    e('e4', 'scan',    'staging'),
-    e('e5', 'staging', 'smoke'),
-    e('e6', 'smoke',   'prod'),
+    e('e1', 'source',  'right',  'build',   'left-target'),
+    e('e2', 'build',   'right',  'test',    'left-target'),
+    e('e3', 'test',    'right',  'scan',    'left-target'),
+    e('e4', 'scan',    'bottom', 'staging', 'top-target'),
+    e('e5', 'staging', 'right',  'smoke',   'left-target'),
+    e('e6', 'smoke',   'right',  'prod',    'left-target'),
   ],
 }
 
@@ -108,14 +114,14 @@ const eventDriven: CanvasTemplate = {
     n('storage', 'Storage',        710,  110, C.neutral,'cylinder',  110, 70),
   ],
   edges: [
-    e('e1', 'prod-a', 'bus'),
-    e('e2', 'prod-b', 'bus'),
-    e('e3', 'bus',    'cons-a'),
-    e('e4', 'bus',    'cons-b'),
-    e('e5', 'bus',    'cons-c'),
-    e('e6', 'bus',    'dlq'),
-    e('e7', 'cons-a', 'storage'),
-    e('e8', 'cons-b', 'storage'),
+    e('e1', 'prod-a', 'right', 'bus',     'left-target'),
+    e('e2', 'prod-b', 'right', 'bus',     'left-target'),
+    e('e3', 'bus',    'right', 'cons-a',  'left-target'),
+    e('e4', 'bus',    'right', 'cons-b',  'left-target'),
+    e('e5', 'bus',    'right', 'cons-c',  'left-target'),
+    e('e6', 'bus',    'right', 'dlq',     'left-target'),
+    e('e7', 'cons-a', 'right', 'storage', 'left-target'),
+    e('e8', 'cons-b', 'right', 'storage', 'left-target'),
   ],
 }
 
