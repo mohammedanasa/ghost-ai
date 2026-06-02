@@ -11,7 +11,8 @@ import { CreateProjectDialog } from "./dialogs/create-project-dialog"
 import { RenameProjectDialog } from "./dialogs/rename-project-dialog"
 import { DeleteProjectDialog } from "./dialogs/delete-project-dialog"
 import { ShareDialog } from "./share-dialog"
-import type { WorkspaceProject } from "./workspace-context"
+import { StarterTemplatesModal } from "./starter-templates-modal"
+import type { WorkspaceProject, TemplatePayload } from "./workspace-context"
 import type { ProjectData } from "@/lib/projects"
 
 interface EditorChromeProps {
@@ -26,6 +27,8 @@ export function EditorChrome({ children, ownedProjects, sharedProjects }: Editor
   const [workspaceProject, setWorkspaceProject] = useState<WorkspaceProject | null>(null)
   const [isAISidebarOpen, setIsAISidebarOpen] = useState(false)
   const [isShareOpen, setIsShareOpen] = useState(false)
+  const [isTemplatesOpen, setIsTemplatesOpen] = useState(false)
+  const [pendingTemplateImport, setPendingTemplateImport] = useState<TemplatePayload | null>(null)
   const pathname = usePathname()
   const segments = pathname.split('/')
   const activeProjectId = segments.length >= 3 && segments[2] ? segments[2] : undefined
@@ -38,6 +41,8 @@ export function EditorChrome({ children, ownedProjects, sharedProjects }: Editor
         setWorkspaceProject,
         isAISidebarOpen,
         toggleAISidebar: () => setIsAISidebarOpen((prev) => !prev),
+        pendingTemplateImport,
+        setPendingTemplateImport,
       }}
     >
     <ProjectDialogsContext.Provider value={{ openCreate: actions.openCreate }}>
@@ -49,6 +54,7 @@ export function EditorChrome({ children, ownedProjects, sharedProjects }: Editor
           isAISidebarOpen={isAISidebarOpen}
           onToggleAISidebar={() => setIsAISidebarOpen((prev) => !prev)}
           onShare={() => setIsShareOpen(true)}
+          onOpenTemplates={() => setIsTemplatesOpen(true)}
         />
         <div className="relative flex-1 min-h-0">
           <ProjectSidebar
@@ -98,6 +104,11 @@ export function EditorChrome({ children, ownedProjects, sharedProjects }: Editor
           onClose={() => setIsShareOpen(false)}
         />
       )}
+      <StarterTemplatesModal
+        open={isTemplatesOpen}
+        onClose={() => setIsTemplatesOpen(false)}
+        onImport={(template) => setPendingTemplateImport({ nodes: template.nodes, edges: template.edges })}
+      />
     </ProjectDialogsContext.Provider>
     </WorkspaceContext.Provider>
   )

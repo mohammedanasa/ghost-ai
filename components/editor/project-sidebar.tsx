@@ -117,80 +117,81 @@ export function ProjectSidebar({
       )}
       <aside
         className={[
-          "fixed top-0 left-0 z-50 h-full w-72",
-          "flex flex-col",
-          "bg-elevated border-r border-border-default",
+          "fixed top-12 left-0 bottom-0 z-50 w-72",
+          "pt-2 pl-2 pb-2",
           "transition-transform duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
       >
-        <div className="flex items-center justify-between px-4 h-12 border-b border-border-default shrink-0">
-          <span className="text-sm font-medium text-copy-primary">Projects</span>
-          <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close sidebar">
-            <X className="h-4 w-4 text-copy-muted" />
-          </Button>
-        </div>
+        <div className="flex flex-col h-full rounded-xl overflow-hidden bg-elevated border border-border-default">
+          <div className="flex items-center justify-between px-4 h-12 border-b border-border-default shrink-0">
+            <span className="text-sm font-medium text-copy-primary">Projects</span>
+            <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close sidebar">
+              <X className="h-4 w-4 text-copy-muted" />
+            </Button>
+          </div>
 
-        <div className="flex flex-col flex-1 min-h-0 px-3 pt-3">
-          <Tabs defaultValue="my-projects" className="flex flex-col flex-1 min-h-0">
-            <TabsList className="w-full">
-              <TabsTrigger value="my-projects" className="flex-1">
-                My Projects
-              </TabsTrigger>
-              <TabsTrigger value="shared" className="flex-1">
-                Shared
-              </TabsTrigger>
-            </TabsList>
+          <div className="flex flex-col flex-1 min-h-0 px-3 pt-3">
+            <Tabs defaultValue="my-projects" className="flex flex-col flex-1 min-h-0">
+              <TabsList className="w-full">
+                <TabsTrigger value="my-projects" className="flex-1">
+                  My Projects
+                </TabsTrigger>
+                <TabsTrigger value="shared" className="flex-1">
+                  Shared
+                </TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="my-projects" className="flex flex-col flex-1 min-h-0 mt-2">
-              {ownedProjects.length === 0 ? (
-                <div className="flex flex-1 items-center justify-center">
-                  <p className="text-sm text-copy-muted">No projects yet.</p>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-0.5">
-                  {ownedProjects.map((project) => (
-                    <ProjectItem
-                      key={project.id}
-                      project={project}
-                      isOwned={true}
-                      isActive={project.id === activeProjectId}
-                      onRename={onOpenRename}
-                      onDelete={onOpenDelete}
-                    />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
+              <TabsContent value="my-projects" className="flex flex-col flex-1 min-h-0 mt-2">
+                {ownedProjects.length === 0 ? (
+                  <div className="flex flex-1 items-center justify-center">
+                    <p className="text-sm text-copy-muted">No projects yet.</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-0.5">
+                    {ownedProjects.map((project) => (
+                      <ProjectItem
+                        key={project.id}
+                        project={project}
+                        isOwned={true}
+                        isActive={project.id === activeProjectId}
+                        onRename={onOpenRename}
+                        onDelete={onOpenDelete}
+                      />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
 
-            <TabsContent value="shared" className="flex flex-col flex-1 min-h-0 mt-2">
-              {sharedProjects.length === 0 ? (
-                <div className="flex flex-1 items-center justify-center">
-                  <p className="text-sm text-copy-muted">No shared projects.</p>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-0.5">
-                  {sharedProjects.map((project) => (
-                    <ProjectItem
-                      key={project.id}
-                      project={project}
-                      isOwned={false}
-                      isActive={project.id === activeProjectId}
-                      onRename={onOpenRename}
-                      onDelete={onOpenDelete}
-                    />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
+              <TabsContent value="shared" className="flex flex-col flex-1 min-h-0 mt-2">
+                {sharedProjects.length === 0 ? (
+                  <div className="flex flex-1 items-center justify-center">
+                    <p className="text-sm text-copy-muted">No shared projects.</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-0.5">
+                    {sharedProjects.map((project) => (
+                      <ProjectItem
+                        key={project.id}
+                        project={project}
+                        isOwned={false}
+                        isActive={project.id === activeProjectId}
+                        onRename={onOpenRename}
+                        onDelete={onOpenDelete}
+                      />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
 
-        <div className="px-3 pb-4 shrink-0">
-          <Button className="w-full gap-2" onClick={onOpenCreate}>
-            <Plus className="h-4 w-4" />
-            New Project
-          </Button>
+          <div className="px-3 pb-4 shrink-0">
+            <Button className="w-full gap-2" onClick={onOpenCreate}>
+              <Plus className="h-4 w-4" />
+              New Project
+            </Button>
+          </div>
         </div>
       </aside>
     </>

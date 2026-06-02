@@ -20,6 +20,7 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
       projectId={project.id}
       projectName={project.name}
       isOwner={project.isOwner}
+      roomId={roomId}
     />
   )
 }

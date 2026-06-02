@@ -10,6 +10,19 @@ export async function getCurrentIdentity(): Promise<{ userId: string; email: str
   return { userId, email }
 }
 
+// Returns both the identity (userId/email) and the full Clerk user object
+export async function getCurrentIdentityWithUser(): Promise<
+  | { userId: string; email: string; user: Awaited<ReturnType<typeof currentUser>> }
+  | null
+> {
+  const { userId } = await auth()
+  if (!userId) return null
+  const user = await currentUser()
+  const email = user?.emailAddresses[0]?.emailAddress?.toLowerCase()
+  if (!email) return null
+  return { userId, email, user }
+}
+
 export async function getAccessibleProject(
   projectId: string,
   userId: string,

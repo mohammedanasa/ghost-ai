@@ -70,6 +70,7 @@ export function useProjectActions(activeProjectId?: string) {
       if (!res.ok) throw new Error("Failed to create project")
       const project = (await res.json()) as { id: string }
       close()
+      router.refresh()
       router.push(`/editor/${project.id}`)
     } finally {
       setIsLoading(false)
@@ -102,10 +103,9 @@ export function useProjectActions(activeProjectId?: string) {
       })
       if (!res.ok) throw new Error("Failed to delete project")
       close()
+      router.refresh()
       if (activeProjectId === target.id) {
         router.push("/editor")
-      } else {
-        router.refresh()
       }
     } finally {
       setIsLoading(false)

@@ -4,7 +4,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 09: Share Dialog — complete
+- Feature 18 (spec: 18-starter-templates.md): Starter Templates — complete
 
 ## Current Goal
 
@@ -12,6 +12,57 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- Feature 18 (spec: 18-starter-templates.md): Starter Templates
+  - `components/editor/starter-templates.ts` — `CanvasTemplate` type + `CANVAS_TEMPLATES` (Microservices, CI/CD Pipeline, Event-Driven System); each node uses shared `CanvasNode`/`CanvasEdge` types and `NODE_COLORS` palette; CI/CD uses 2-row layout for compact preview
+  - `components/editor/starter-templates-modal.tsx` — `StarterTemplatesModal` dialog (`max-w-5xl`, fixed `grid-cols-3`); `TemplatePreview` SVG uses template's own coordinate space as dynamic `viewBox` + `width="100%"` so it fills the card at any size; `aspectRatio` set from actual bounds; edges as lines, nodes as shape-matched SVG elements
+  - `components/editor/workspace-context.tsx` — added `TemplatePayload` type + `pendingTemplateImport`/`setPendingTemplateImport` to bridge navbar-level open action to canvas-level Liveblocks state
+  - `components/editor/canvas-flow.tsx` — `useEffect` watches `pendingTemplateImport`; applies remove+add `NodeChange`/`EdgeChange` events through `onNodesChange`/`onEdgesChange` to stay in Liveblocks storage; clears payload and calls `fitView`
+  - `components/editor/editor-navbar.tsx` — `LayoutTemplate` icon button added to workspace action group
+  - `components/editor/editor-chrome.tsx` — `isTemplatesOpen` + `pendingTemplateImport` state; `StarterTemplatesModal` wired; `onOpenTemplates` passed to navbar
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 17 (spec: 17-canvas-ergonomics.md.md): Canvas Ergonomics — floating control bar + keyboard shortcuts
+  - `components/editor/canvas-flow.tsx` — `ControlBar` pill component (bottom-left Panel): zoom out/fit/in + divider + undo/redo; buttons use `rfInstanceRef.current` with `{ duration: 200 }` animation; undo/redo via `useUndo`/`useRedo`; disabled state via `useCanUndo`/`useCanRedo` (opacity-30, pointer-events-none)
+  - `hooks/useKeyboardShortcuts.ts` — listens on `window`; skips INPUT/TEXTAREA/contentEditable targets; `+`/`=` zoom in, `-` zoom out, `Cmd/Ctrl+Z` undo, `Cmd/Ctrl+Shift+Z` redo, `Cmd/Ctrl+Y` redo
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 16 (spec: 16-nodes-color-toolbar.md): Node Color Toolbar
+  - `components/editor/canvas-node.tsx` — `SwatchButton` (hover glow via box-shadow with text color alpha, active outline ring); `ColorToolbar` (floats 8px above node via `bottom: calc(100% + 8px)`, stops pointer/mouse events to prevent drag); `useReactFlow().updateNodeData` for Liveblocks-backed color changes; wired into all six shapes
+  - `types/canvas.ts` — `NODE_COLORS` (8 fill/text pairs per ui-context.md palette), `DEFAULT_NODE_COLOR`, `NodeColor` type
+  - Text color derived from fill via palette lookup — both update atomically when a swatch is clicked
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 16: Edge Behavior and Custom Edge Renderer
+  - `components/editor/canvas-edge.tsx` — `CanvasEdgeComponent`: `getSmoothStepPath` for right-angle routing; wide transparent stroke (20px) for hit area; visible stroke dims to 0.45 opacity at rest, full opacity on hover/select; `EdgeLabelRenderer` positioned at `labelX/labelY` from path; double-click opens `EdgeLabelInput` (auto-growing); saved labels as pill badges; faint "Add label…" hint on active unlabelled edges; `updateEdgeData` for collaborative label updates; all pointer events blocked from propagating to canvas
+  - `types/canvas.ts` — `CanvasEdgeData` with `label?: string`; `CanvasEdge` updated to use it
+  - `components/editor/canvas-node.tsx` — handles styled as 8px white dots with dark border; hidden at opacity 0 by default, fade to 1 on node hover via `nodeHovered` state; both source and target handles on all four sides
+  - `components/editor/canvas-flow.tsx` — registers `canvasEdgeTypes`; `defaultEdgeOptions` sets `type: 'canvasEdge'` and `markerEnd: ArrowClosed` with `#f8fafc` color
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 15: Node Color Toolbar
+  - `components/editor/canvas-node.tsx` — `SwatchButton` (hover glow via box-shadow with text color alpha, active outline ring); `ColorToolbar` (floats 8px above node via `bottom: calc(100% + 8px)`, stops pointer/mouse events to prevent drag); both `useReactFlow().updateNodeData` for Liveblocks-backed color changes
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 14: Node Resizing and Inline Label Editing
+  - `components/editor/canvas-node.tsx` — `NodeResizer` (visible when selected, min 60×40, subtle accent handles); `LabelEditor` textarea overlay on double-click: updates via `useReactFlow().updateNodeData`, closes on blur or Escape, stops pointer/mouse propagation to prevent canvas drag
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 13: Node Shape Rendering
+  - `components/editor/canvas-node.tsx` — CSS shapes (rectangle → `rounded-xl`, pill/circle → `rounded-full`) with dynamic border (`--border-subtle` at rest, `--accent-primary` when selected); SVG shapes (diamond, hexagon, cylinder) with `viewBox="0 0 100 100"`, `preserveAspectRatio="none"`, and `vectorEffect="non-scaling-stroke"`; all shapes scale with node dimensions
+  - `components/editor/shape-panel.tsx` — drag ghost preview via React portal: suppresses default browser ghost with transparent `setDragImage`, tracks cursor with `onDrag` (filters (0,0) terminal event), renders matching shape at default size centered on cursor, clears on `onDragEnd`
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 12: Shape Panel
+  - `types/canvas.ts` — extended `NodeShape` to all 6 shapes + `NODE_COLORS` (8 pairs) + `DEFAULT_NODE_COLOR` + `NODE_SHAPES` (defaults per shape) + `ShapeDragPayload`
+  - `components/editor/canvas-node.tsx` — `CanvasNodeComponent`: bordered rectangle renderer with centered label, 4 handles; `canvasNodeTypes` map
+  - `components/editor/shape-panel.tsx` — floating pill toolbar with draggable buttons for all 6 shapes; drag payload includes shape + default size
+  - `components/editor/canvas-flow.tsx` — registers `canvasNodeTypes`, `onInit` captures React Flow instance; `dragover`/`drop` handlers convert screen coords → flow position and create new nodes with shape payload; `ShapePanel` via React Flow `Panel`
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 11: Base Canvas
+  - `types/canvas.ts` — `CanvasNodeData` (label, color, shape) + `CanvasNode` / `CanvasEdge` custom types
+  - `components/editor/canvas-room.tsx` — `LiveblocksProvider` + `RoomProvider` + `ErrorBoundary` + `ClientSideSuspense`
+  - `components/editor/canvas-flow.tsx` — `useLiveblocksFlow` (suspense) wired to `ReactFlow` with `MiniMap`, dot `Background`, `Cursors`, `fitView`, loose connections
+  - `WorkspaceChrome` updated to accept `roomId` and render `CanvasRoom`
+  - `app/editor/[roomId]/page.tsx` passes `roomId` to `WorkspaceChrome`
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 10: Liveblocks Setup
+  - `liveblocks.config.ts` — Presence (cursor, isThinking) + UserMeta (name, avatar, color) types
+  - `lib/liveblocks.ts` — lazy-cached node client (`getLiveblocks()`) + deterministic cursor color helper
+  - `app/api/liveblocks-auth/route.ts` — POST: Clerk auth, project access check, `getOrCreateRoom`, ID token
+  - TypeScript: zero errors, `npm run build` passes
 - Feature 09: Share Dialog
   - `app/api/projects/[projectId]/collaborators/route.ts` — GET (list, Clerk-enriched), POST (invite, owner-only)
   - `app/api/projects/[projectId]/collaborators/[collaboratorId]/route.ts` — DELETE (owner-only)
@@ -84,7 +135,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 10 (next feature spec)
+- Feature 19 (next feature spec)
 
 ## Open Questions
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { PanelLeftClose, PanelLeftOpen, Share2, Bot } from "lucide-react"
+import { PanelLeftClose, PanelLeftOpen, Share2, Bot, LayoutTemplate } from "lucide-react"
 import { UserButton } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -12,6 +12,7 @@ interface EditorNavbarProps {
   isAISidebarOpen?: boolean
   onToggleAISidebar?: () => void
   onShare?: () => void
+  onOpenTemplates?: () => void
 }
 
 export function EditorNavbar({
@@ -21,6 +22,7 @@ export function EditorNavbar({
   isAISidebarOpen,
   onToggleAISidebar,
   onShare,
+  onOpenTemplates,
 }: EditorNavbarProps) {
   return (
     <header className="h-12 flex items-center justify-between px-3 bg-surface border-b border-border-default shrink-0">
@@ -33,15 +35,21 @@ export function EditorNavbar({
           )}
         </Button>
         {workspaceTitle && (
-          <span className="text-sm font-medium text-copy-primary truncate max-w-xs">
-            {workspaceTitle}
-          </span>
+          <div className="flex flex-col justify-center">
+            <span className="text-sm font-medium text-copy-primary truncate max-w-xs leading-tight">
+              {workspaceTitle}
+            </span>
+            <span className="text-xs text-copy-muted leading-tight">Workspace</span>
+          </div>
         )}
       </div>
 
       <div className="flex items-center gap-1">
         {workspaceTitle && (
           <>
+            <Button variant="ghost" size="icon" onClick={onOpenTemplates} aria-label="Starter templates">
+              <LayoutTemplate className="h-5 w-5 text-copy-secondary" />
+            </Button>
             <Button variant="outline" size="sm" className="gap-2 mr-1" onClick={onShare}>
               <Share2 className="h-4 w-4" />
               Share
