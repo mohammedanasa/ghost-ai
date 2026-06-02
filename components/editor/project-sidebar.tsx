@@ -37,6 +37,12 @@ function ProjectItem({ project, isOwned, isActive, onRename, onDelete }: Project
     >
       <span
         className={cn(
+          "h-1.5 w-1.5 rounded-full shrink-0 transition-colors",
+          isActive ? "bg-state-success" : "bg-transparent",
+        )}
+      />
+      <span
+        className={cn(
           "flex-1 text-sm truncate",
           isActive ? "text-copy-primary" : "text-copy-secondary",
         )}

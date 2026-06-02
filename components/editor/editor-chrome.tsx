@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { usePathname } from "next/navigation"
 import { EditorNavbar } from "./editor-navbar"
 import { ProjectSidebar } from "./project-sidebar"
@@ -29,10 +29,22 @@ export function EditorChrome({ children, ownedProjects, sharedProjects }: Editor
   const [isShareOpen, setIsShareOpen] = useState(false)
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false)
   const [pendingTemplateImport, setPendingTemplateImport] = useState<TemplatePayload | null>(null)
+  const [localOwnedProjects, setLocalOwnedProjects] = useState(ownedProjects)
   const pathname = usePathname()
   const segments = pathname.split('/')
   const activeProjectId = segments.length >= 3 && segments[2] ? segments[2] : undefined
-  const actions = useProjectActions(activeProjectId)
+
+  const onCreated = useCallback((project: ProjectData) => {
+    setLocalOwnedProjects((prev) => [project, ...prev])
+  }, [])
+  const onRenamed = useCallback((id: string, name: string) => {
+    setLocalOwnedProjects((prev) => prev.map((p) => (p.id === id ? { ...p, name } : p)))
+  }, [])
+  const onDeleted = useCallback((id: string) => {
+    setLocalOwnedProjects((prev) => prev.filter((p) => p.id !== id))
+  }, [])
+
+  const actions = useProjectActions(activeProjectId, { onCreated, onRenamed, onDeleted })
 
   return (
     <WorkspaceContext.Provider
@@ -63,7 +75,7 @@ export function EditorChrome({ children, ownedProjects, sharedProjects }: Editor
             onOpenCreate={actions.openCreate}
             onOpenRename={actions.openRename}
             onOpenDelete={actions.openDelete}
-            ownedProjects={ownedProjects}
+            ownedProjects={localOwnedProjects}
             sharedProjects={sharedProjects}
             activeProjectId={activeProjectId}
           />
