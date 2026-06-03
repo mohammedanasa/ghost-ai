@@ -4,7 +4,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 26 (spec: 26-ai-chat-functional.md): AI Chat Functional — complete
+- Feature 29 (spec: 29-spec-ui-integration.md): Spec UI Integration — complete
 
 ## Current Goal
 
@@ -12,6 +12,22 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- Feature 29 (spec: 29-spec-ui-integration.md): Spec UI Integration
+  - `react-markdown` installed (v10)
+  - `app/api/projects/[projectId]/specs/route.ts` — `GET`: auth via `getCurrentIdentity`, verifies project access via `getAccessibleProject`, queries `ProjectSpec` records ordered by `createdAt` desc, returns `{ specs: { id, createdAt, filename }[] }` where `filename` is derived as `spec-${id}.md`
+  - `components/editor/spec-preview-modal.tsx` — `Dialog` with controlled `open` (driven by `specId !== null`); fetches content from existing download endpoint via `fetch()`; renders Markdown with `react-markdown` using custom component map (h1–h3, p, ul/ol/li, code inline/block, pre, strong, em, hr, blockquote) all using project color tokens; download button triggers anchor click; Escape key closes via base-ui Dialog behavior; `ScrollArea` for content
+  - `components/editor/ai-sidebar.tsx` — Specs tab replaced: fetches spec list on mount (when `projectId` is set); shows loading spinner, error with retry, empty state, or list of spec items; each item shows filename + createdAt, is clickable (opens preview modal), has a hover-revealed download button; `SpecPreviewModal` rendered at component bottom, driven by `selectedSpec` state; `downloadSpec` callback creates temporary anchor for browser download
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 28 (spec: 28-spec-persistence-download.md): Spec Persistence & Download
+  - `prisma/models/project.prisma` — `ProjectSpec` model added with `id`, `projectId` (relation to Project with cascade delete), `filePath` (Vercel Blob URL), `createdAt`; `Project` now has `specs ProjectSpec[]` relation; migration `20260603082043_add_project_spec` applied
+  - `trigger/generate-spec.ts` — after generating Markdown: creates a `ProjectSpec` record to get the ID, uploads to Vercel Blob at `specs/{projectId}/{specId}.md`, updates record with blob URL; metadata status gains `"saving"` phase between generating and complete; returns `{ spec, specId }`
+  - `app/api/projects/[projectId]/specs/[specId]/download/route.ts` — `GET`: auth via `getCurrentIdentity`, verifies project access via `getAccessibleProject`, fetches `ProjectSpec` by `specId`, confirms `spec.projectId === projectId` (forbidden if mismatched), fetches blob content via `get()`, returns as `text/markdown` attachment with `Content-Disposition: attachment`; 401/403/404 handled correctly
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 27 (spec: 27-spec-generation-flow.md): Spec Generation Flow
+  - `app/api/ai/spec/route.ts` — `POST`: auth via `getCurrentIdentity`, validates `roomId`/`chatHistory`/`nodes`/`edges`, derives `projectId` from `roomId` via `getAccessibleProject` (never trusts client-supplied projectId), triggers `generate-spec` task, creates `TaskRun` record, returns `{ runId }`
+  - `app/api/ai/spec/token/route.ts` — `POST`: auth via `getCurrentIdentity`, validates `runId`, verifies `TaskRun` ownership, generates Trigger.dev public token scoped to the run with 1h expiration, returns `{ token }`
+  - `trigger/generate-spec.ts` — `generateSpec` schemaTask: Zod-validated input (`projectId`, `roomId`, `chatHistory`, `nodes`, `edges`); uses Gemini `gemini-2.5-flash` via `@ai-sdk/google` to generate Markdown spec from canvas components + edges + chat history; updates metadata status (`analyzing` → `generating` → `complete`); returns `{ spec: text }`
+  - TypeScript: zero errors, `npm run build` passes
 - Feature 26 (spec: 26-ai-chat-functional.md): AI Chat Functional
   - `components/editor/ai-sidebar.tsx` — `handleSend` now async: pushes user message to `ai-chat`, calls `POST /api/ai/design` with `{ prompt, roomId, projectId }`, then `POST /api/ai/design/token` with `{ runId }` to get `publicToken`; `useRealtimeRun(runId, { accessToken: publicToken })` tracks run status; `useEffect` on `run.status` pushes AI completion/error message to `ai-chat` and clears run state on terminal status; `isRunActive` (runId !== null) combined with `isGenerating` (AI_PRESENCE events) controls input disabled + button spinner; status strip moves above input, shows only when `isRunActive || statusText`; user bubble: `bg-[#62C073] text-[#0f2e18]`; AI bubble: `bg-subtle text-copy-primary`; submit button: green accent `bg-[#62C073]`; errors shown as AI assistant messages in feed; `useRoom().id` supplies roomId; `useWorkspace().workspaceProject?.id` supplies projectId
   - TypeScript: zero errors, `npm run build` passes

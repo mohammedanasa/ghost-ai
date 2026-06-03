@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useCallback, useEffect, type KeyboardEvent } from "react"
-import { Bot, X, Send, FileText, Download, Loader2, AlertCircle } from "lucide-react"
+import { Bot, X, Send, FileText, Download, Loader2, AlertCircle, RefreshCw } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -10,6 +10,13 @@ import { LiveObject } from "@liveblocks/client"
 import { useRealtimeRun } from "@trigger.dev/react-hooks"
 import { AiStatusPayloadSchema, ChatMessageSchema, type ChatMessage } from "@/types/tasks"
 import { useWorkspace } from "./workspace-context"
+import { SpecPreviewModal } from "./spec-preview-modal"
+
+interface SpecItem {
+  id: string
+  createdAt: string
+  filename: string
+}
 
 const STARTER_CHIPS = [
   "Design an e-commerce backend",
@@ -49,6 +56,30 @@ function RunTracker({
   return null
 }
 
+// Tracks a spec generation run; separate component to isolate useRealtimeRun.
+function SpecRunTracker({
+  runId,
+  publicToken,
+  onComplete,
+}: {
+  runId: string
+  publicToken: string
+  onComplete: (success: boolean) => void
+}) {
+  const { run } = useRealtimeRun(runId, { accessToken: publicToken })
+  const handledRef = useRef(false)
+
+  useEffect(() => {
+    if (!run || handledRef.current) return
+    const TERMINAL = ["COMPLETED", "FAILED", "CANCELED", "CRASHED", "TIMED_OUT", "INTERRUPTED", "SYSTEM_FAILURE"]
+    if (!TERMINAL.includes(run.status)) return
+    handledRef.current = true
+    onComplete(run.status === "COMPLETED")
+  }, [run?.status, onComplete])
+
+  return null
+}
+
 interface AiSidebarProps {
   isOpen: boolean
   onClose: () => void
@@ -59,6 +90,13 @@ export function AiSidebar({ isOpen, onClose }: AiSidebarProps) {
   const room = useRoom()
   const { workspaceProject } = useWorkspace()
   const rawMessages = useStorage((root) => root.aiChat)
+  // Canvas nodes/edges are stored by @liveblocks/react-flow under the "flow" key
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const flowData = useStorage((root) => (root as any).flow as {
+    nodes: Record<string, unknown>
+    edges: Record<string, unknown>
+  } | null)
+
   const [draft, setDraft] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   const [statusText, setStatusText] = useState<string | null>(null)
@@ -71,6 +109,91 @@ export function AiSidebar({ isOpen, onClose }: AiSidebarProps) {
   const roomId = room.id
   const projectId = workspaceProject?.id ?? ""
   const isRunActive = runId !== null
+
+  // Specs state
+  const [specs, setSpecs] = useState<SpecItem[]>([])
+  const [specsLoading, setSpecsLoading] = useState(false)
+  const [specsError, setSpecsError] = useState<string | null>(null)
+  const [selectedSpec, setSelectedSpec] = useState<SpecItem | null>(null)
+  const [specRunId, setSpecRunId] = useState<string | null>(null)
+  const [specPublicToken, setSpecPublicToken] = useState<string | null>(null)
+  const [isGeneratingSpec, setIsGeneratingSpec] = useState(false)
+  const [specGenError, setSpecGenError] = useState<string | null>(null)
+
+  const fetchSpecs = useCallback(() => {
+    if (!projectId) return
+    setSpecsLoading(true)
+    setSpecsError(null)
+    fetch(`/api/projects/${projectId}/specs`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load specs")
+        return res.json() as Promise<{ specs: SpecItem[] }>
+      })
+      .then(({ specs: data }) => setSpecs(data))
+      .catch((err: unknown) => setSpecsError(err instanceof Error ? err.message : "Failed to load"))
+      .finally(() => setSpecsLoading(false))
+  }, [projectId])
+
+  useEffect(() => {
+    fetchSpecs()
+  }, [fetchSpecs])
+
+  const downloadSpec = useCallback((specId: string, filename: string) => {
+    const a = document.createElement("a")
+    a.href = `/api/projects/${projectId}/specs/${specId}/download`
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }, [projectId])
+
+  const handleGenerateSpec = useCallback(async () => {
+    if (!projectId || !roomId || isGeneratingSpec) return
+    setIsGeneratingSpec(true)
+    setSpecGenError(null)
+    try {
+      const currentNodes = Object.values(flowData?.nodes ?? {})
+      const currentEdges = Object.values(flowData?.edges ?? {})
+      const validatedMessages: ChatMessage[] = (rawMessages ?? []).flatMap((msg) => {
+        const parsed = ChatMessageSchema.safeParse(msg)
+        return parsed.success ? [parsed.data] : []
+      })
+      const chatHistory = validatedMessages.map((m) => ({ role: m.role, content: m.content }))
+
+      const res = await fetch("/api/ai/spec", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId, chatHistory, nodes: currentNodes, edges: currentEdges }),
+      })
+      if (!res.ok) throw new Error("Failed to start spec generation")
+      const { runId: newRunId } = await res.json() as { runId: string }
+
+      const tokenRes = await fetch("/api/ai/spec/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ runId: newRunId }),
+      })
+      if (!tokenRes.ok) throw new Error("Failed to get spec run token")
+      const { token } = await tokenRes.json() as { token: string }
+
+      setSpecRunId(newRunId)
+      setSpecPublicToken(token)
+    } catch (err) {
+      setSpecGenError(err instanceof Error ? err.message : "Failed to generate spec")
+      setIsGeneratingSpec(false)
+    }
+  }, [projectId, roomId, isGeneratingSpec, flowData, rawMessages])
+
+  const handleSpecRunComplete = useCallback((success: boolean) => {
+    setSpecRunId(null)
+    setSpecPublicToken(null)
+    setIsGeneratingSpec(false)
+    if (!success) {
+      setSpecGenError("Spec generation failed. Please try again.")
+      return
+    }
+    fetchSpecs()
+  }, [fetchSpecs])
 
   // Validate messages from storage before rendering
   const messages: ChatMessage[] = (rawMessages ?? []).flatMap((msg) => {
@@ -328,36 +451,90 @@ export function AiSidebar({ isOpen, onClose }: AiSidebarProps) {
           </TabsContent>
 
           {/* Specs tab */}
-          <TabsContent value="specs" className="min-h-0 flex flex-col">
-            <div className="flex flex-col gap-3 p-3">
-              <Button className="w-full bg-ai text-white hover:bg-ai/90">
-                Generate Spec
+          <TabsContent value="specs" className="min-h-0 flex flex-col flex-1">
+            {/* Generate button — always visible at top */}
+            <div className="px-3 pt-3 pb-2 shrink-0">
+              <Button
+                onClick={handleGenerateSpec}
+                disabled={isGeneratingSpec || !projectId}
+                className="w-full bg-ai text-white hover:bg-ai/90 disabled:opacity-60"
+              >
+                {isGeneratingSpec ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Generating…
+                  </>
+                ) : (
+                  "Generate Spec"
+                )}
               </Button>
+              {specGenError && (
+                <p className="text-xs text-red-400 mt-2 text-center">{specGenError}</p>
+              )}
+            </div>
 
-              <div className="rounded-xl bg-elevated border border-border-default p-3">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-subtle">
-                    <FileText className="h-4 w-4 text-ai-text" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-copy-primary leading-tight">
-                      Microservices Architecture
-                    </p>
-                    <p className="text-xs text-copy-muted mt-1 line-clamp-2">
-                      A scalable microservices system with API gateway, auth service, and message queue for async communication.
-                    </p>
-                  </div>
+            <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-3">
+              {specsLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="h-4 w-4 animate-spin text-copy-muted" />
                 </div>
-                <div className="mt-3 flex justify-end">
+              ) : specsError ? (
+                <div className="flex flex-col items-center gap-2 py-10 text-center">
+                  <p className="text-xs text-red-400">{specsError}</p>
                   <button
-                    disabled
-                    className="flex items-center gap-1.5 text-xs text-copy-faint opacity-50 cursor-not-allowed"
+                    onClick={fetchSpecs}
+                    className="flex items-center gap-1 text-xs text-copy-muted hover:text-copy-primary transition-colors"
                   >
-                    <Download className="h-3.5 w-3.5" />
-                    Download
+                    <RefreshCw className="h-3 w-3" />
+                    Retry
                   </button>
                 </div>
-              </div>
+              ) : specs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+                  <FileText className="h-8 w-8 text-copy-faint" />
+                  <div>
+                    <p className="text-sm font-medium text-copy-primary">No specs yet</p>
+                    <p className="text-xs text-copy-muted mt-1">Generate one above.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {specs.map((spec) => (
+                    <div
+                      key={spec.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setSelectedSpec(spec)}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelectedSpec(spec) }}
+                      className="group rounded-xl bg-elevated border border-border-default p-3 cursor-pointer hover:border-border-subtle transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <FileText className="h-4 w-4 text-ai-text shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-copy-primary truncate">{spec.filename}</p>
+                          <p className="text-[10px] text-copy-muted mt-0.5">
+                            {new Date(spec.createdAt).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </p>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            downloadSpec(spec.id, spec.filename)
+                          }}
+                          className="h-7 w-7 flex items-center justify-center rounded-lg text-copy-faint opacity-0 group-hover:opacity-100 hover:text-copy-primary hover:bg-subtle transition-all shrink-0"
+                          title="Download"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>
@@ -366,6 +543,17 @@ export function AiSidebar({ isOpen, onClose }: AiSidebarProps) {
       {runId && publicToken && (
         <RunTracker runId={runId} publicToken={publicToken} onComplete={handleRunComplete} />
       )}
+
+      {specRunId && specPublicToken && (
+        <SpecRunTracker runId={specRunId} publicToken={specPublicToken} onComplete={handleSpecRunComplete} />
+      )}
+
+      <SpecPreviewModal
+        projectId={projectId}
+        specId={selectedSpec?.id ?? null}
+        filename={selectedSpec?.filename ?? ""}
+        onClose={() => setSelectedSpec(null)}
+      />
     </aside>
   )
 }
