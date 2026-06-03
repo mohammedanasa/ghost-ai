@@ -4,7 +4,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 25 (spec: 25-sidebar-chat-feed.md): Sidebar Chat Feed — complete
+- Feature 26 (spec: 26-ai-chat-functional.md): AI Chat Functional — complete
 
 ## Current Goal
 
@@ -12,6 +12,9 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- Feature 26 (spec: 26-ai-chat-functional.md): AI Chat Functional
+  - `components/editor/ai-sidebar.tsx` — `handleSend` now async: pushes user message to `ai-chat`, calls `POST /api/ai/design` with `{ prompt, roomId, projectId }`, then `POST /api/ai/design/token` with `{ runId }` to get `publicToken`; `useRealtimeRun(runId, { accessToken: publicToken })` tracks run status; `useEffect` on `run.status` pushes AI completion/error message to `ai-chat` and clears run state on terminal status; `isRunActive` (runId !== null) combined with `isGenerating` (AI_PRESENCE events) controls input disabled + button spinner; status strip moves above input, shows only when `isRunActive || statusText`; user bubble: `bg-[#62C073] text-[#0f2e18]`; AI bubble: `bg-subtle text-copy-primary`; submit button: green accent `bg-[#62C073]`; errors shown as AI assistant messages in feed; `useRoom().id` supplies roomId; `useWorkspace().workspaceProject?.id` supplies projectId
+  - TypeScript: zero errors, `npm run build` passes
 - Feature 25 (spec: 25-sidebar-chat-feed.md): Sidebar Chat Feed
   - `types/tasks.ts` — `ChatMessageSchema` (Zod, `id`, `sender`, `role`, `content`, `timestamp`) + `ChatMessage` type
   - `liveblocks.config.ts` — `Storage.aiChat: LiveList<LiveObject<ChatMessage>>` added; imports `LiveList`, `LiveObject` from `@liveblocks/client` and `ChatMessage` from `@/types/tasks`
