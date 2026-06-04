@@ -1,20 +1,33 @@
 "use client"
 
 import { LiveblocksProvider, RoomProvider, ClientSideSuspense } from '@liveblocks/react'
+import { LiveList } from '@liveblocks/client'
 import { ErrorBoundary } from 'react-error-boundary'
 import { CanvasFlow } from './canvas-flow'
+import { AiSidebar } from './ai-sidebar'
+import { useWorkspace } from './workspace-context'
 
 interface CanvasRoomProps {
   roomId: string
 }
 
+function CanvasWithSidebar() {
+  const { isAISidebarOpen, toggleAISidebar } = useWorkspace()
+  return (
+    <div className="relative h-full w-full">
+      <CanvasFlow />
+      <AiSidebar isOpen={isAISidebarOpen} onClose={toggleAISidebar} />
+    </div>
+  )
+}
+
 export function CanvasRoom({ roomId }: CanvasRoomProps) {
   return (
     <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
-      <RoomProvider id={roomId} initialPresence={{ cursor: null, isThinking: false }}>
+      <RoomProvider id={roomId} initialPresence={{ cursor: null, thinking: false }} initialStorage={{ aiChat: new LiveList([]) }}>
         <ErrorBoundary fallback={<CanvasError />}>
           <ClientSideSuspense fallback={<CanvasLoading />}>
-            <CanvasFlow />
+            <CanvasWithSidebar />
           </ClientSideSuspense>
         </ErrorBoundary>
       </RoomProvider>

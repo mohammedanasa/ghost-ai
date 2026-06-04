@@ -2,12 +2,19 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import type { ProjectData } from "@/lib/projects"
 
 export type DialogType = "create" | "rename" | "delete" | null
 
 export interface DialogTarget {
   id: string
   name: string
+}
+
+export interface ProjectMutationCallbacks {
+  onCreated?: (project: ProjectData) => void
+  onRenamed?: (id: string, name: string) => void
+  onDeleted?: (id: string) => void
 }
 
 function toSlug(name: string): string {
@@ -24,7 +31,7 @@ function shortSuffix(): string {
   return Math.random().toString(36).slice(2, 7)
 }
 
-export function useProjectActions(activeProjectId?: string) {
+export function useProjectActions(activeProjectId?: string, callbacks?: ProjectMutationCallbacks) {
   const router = useRouter()
   const [openDialog, setOpenDialog] = useState<DialogType>(null)
   const [target, setTarget] = useState<DialogTarget | null>(null)
@@ -68,10 +75,11 @@ export function useProjectActions(activeProjectId?: string) {
         body: JSON.stringify({ name: formName.trim() }),
       })
       if (!res.ok) throw new Error("Failed to create project")
-      const project = (await res.json()) as { id: string }
+      const project = (await res.json()) as ProjectData
       close()
-      router.refresh()
+      callbacks?.onCreated?.(project)
       router.push(`/editor/${project.id}`)
+      router.refresh()
     } finally {
       setIsLoading(false)
     }
@@ -88,6 +96,7 @@ export function useProjectActions(activeProjectId?: string) {
       })
       if (!res.ok) throw new Error("Failed to rename project")
       close()
+      callbacks?.onRenamed?.(target.id, formName.trim())
       router.refresh()
     } finally {
       setIsLoading(false)
@@ -103,10 +112,11 @@ export function useProjectActions(activeProjectId?: string) {
       })
       if (!res.ok) throw new Error("Failed to delete project")
       close()
-      router.refresh()
+      callbacks?.onDeleted?.(target.id)
       if (activeProjectId === target.id) {
         router.push("/editor")
       }
+      router.refresh()
     } finally {
       setIsLoading(false)
     }

@@ -4,7 +4,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 18 (spec: 18-starter-templates.md): Starter Templates — complete
+- Feature 29 (spec: 29-spec-ui-integration.md): Spec UI Integration — complete
 
 ## Current Goal
 
@@ -12,6 +12,62 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- Feature 29 (spec: 29-spec-ui-integration.md): Spec UI Integration
+  - `react-markdown` installed (v10)
+  - `app/api/projects/[projectId]/specs/route.ts` — `GET`: auth via `getCurrentIdentity`, verifies project access via `getAccessibleProject`, queries `ProjectSpec` records ordered by `createdAt` desc, returns `{ specs: { id, createdAt, filename }[] }` where `filename` is derived as `spec-${id}.md`
+  - `components/editor/spec-preview-modal.tsx` — `Dialog` with controlled `open` (driven by `specId !== null`); fetches content from existing download endpoint via `fetch()`; renders Markdown with `react-markdown` using custom component map (h1–h3, p, ul/ol/li, code inline/block, pre, strong, em, hr, blockquote) all using project color tokens; download button triggers anchor click; Escape key closes via base-ui Dialog behavior; `ScrollArea` for content
+  - `components/editor/ai-sidebar.tsx` — Specs tab replaced: fetches spec list on mount (when `projectId` is set); shows loading spinner, error with retry, empty state, or list of spec items; each item shows filename + createdAt, is clickable (opens preview modal), has a hover-revealed download button; `SpecPreviewModal` rendered at component bottom, driven by `selectedSpec` state; `downloadSpec` callback creates temporary anchor for browser download
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 28 (spec: 28-spec-persistence-download.md): Spec Persistence & Download
+  - `prisma/models/project.prisma` — `ProjectSpec` model added with `id`, `projectId` (relation to Project with cascade delete), `filePath` (Vercel Blob URL), `createdAt`; `Project` now has `specs ProjectSpec[]` relation; migration `20260603082043_add_project_spec` applied
+  - `trigger/generate-spec.ts` — after generating Markdown: creates a `ProjectSpec` record to get the ID, uploads to Vercel Blob at `specs/{projectId}/{specId}.md`, updates record with blob URL; metadata status gains `"saving"` phase between generating and complete; returns `{ spec, specId }`
+  - `app/api/projects/[projectId]/specs/[specId]/download/route.ts` — `GET`: auth via `getCurrentIdentity`, verifies project access via `getAccessibleProject`, fetches `ProjectSpec` by `specId`, confirms `spec.projectId === projectId` (forbidden if mismatched), fetches blob content via `get()`, returns as `text/markdown` attachment with `Content-Disposition: attachment`; 401/403/404 handled correctly
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 27 (spec: 27-spec-generation-flow.md): Spec Generation Flow
+  - `app/api/ai/spec/route.ts` — `POST`: auth via `getCurrentIdentity`, validates `roomId`/`chatHistory`/`nodes`/`edges`, derives `projectId` from `roomId` via `getAccessibleProject` (never trusts client-supplied projectId), triggers `generate-spec` task, creates `TaskRun` record, returns `{ runId }`
+  - `app/api/ai/spec/token/route.ts` — `POST`: auth via `getCurrentIdentity`, validates `runId`, verifies `TaskRun` ownership, generates Trigger.dev public token scoped to the run with 1h expiration, returns `{ token }`
+  - `trigger/generate-spec.ts` — `generateSpec` schemaTask: Zod-validated input (`projectId`, `roomId`, `chatHistory`, `nodes`, `edges`); uses Gemini `gemini-2.5-flash` via `@ai-sdk/google` to generate Markdown spec from canvas components + edges + chat history; updates metadata status (`analyzing` → `generating` → `complete`); returns `{ spec: text }`
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 26 (spec: 26-ai-chat-functional.md): AI Chat Functional
+  - `components/editor/ai-sidebar.tsx` — `handleSend` now async: pushes user message to `ai-chat`, calls `POST /api/ai/design` with `{ prompt, roomId, projectId }`, then `POST /api/ai/design/token` with `{ runId }` to get `publicToken`; `useRealtimeRun(runId, { accessToken: publicToken })` tracks run status; `useEffect` on `run.status` pushes AI completion/error message to `ai-chat` and clears run state on terminal status; `isRunActive` (runId !== null) combined with `isGenerating` (AI_PRESENCE events) controls input disabled + button spinner; status strip moves above input, shows only when `isRunActive || statusText`; user bubble: `bg-[#62C073] text-[#0f2e18]`; AI bubble: `bg-subtle text-copy-primary`; submit button: green accent `bg-[#62C073]`; errors shown as AI assistant messages in feed; `useRoom().id` supplies roomId; `useWorkspace().workspaceProject?.id` supplies projectId
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 25 (spec: 25-sidebar-chat-feed.md): Sidebar Chat Feed
+  - `types/tasks.ts` — `ChatMessageSchema` (Zod, `id`, `sender`, `role`, `content`, `timestamp`) + `ChatMessage` type
+  - `liveblocks.config.ts` — `Storage.aiChat: LiveList<LiveObject<ChatMessage>>` added; imports `LiveList`, `LiveObject` from `@liveblocks/client` and `ChatMessage` from `@/types/tasks`
+  - `components/editor/canvas-room.tsx` — `initialStorage={{ aiChat: new LiveList([]) }}` added to `RoomProvider`
+  - `components/editor/ai-sidebar.tsx` — `useStorage` subscribes to `root.aiChat`; messages validated with `ChatMessageSchema.safeParse` before rendering; `useMutation` pushes `new LiveObject(message)` into `aiChat`; `useSelf` provides sender name; message bubbles show sender name + timestamp; error strip for send failures (`sendError` state + `AlertCircle` icon); `messagesEndRef` auto-scrolls on new message; `ai-chat` fully separated from `ai-status-feed` (event listener only)
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 24 (spec: 24-ai-presence-state.md): AI Presence State
+  - `types/tasks.ts` — `AiStatusPayloadSchema` (Zod, `text?: string`) + `AiStatusPayload` type for feed message validation
+  - `components/editor/canvas-room.tsx` — added `CanvasWithSidebar` wrapper inside `ClientSideSuspense`; renders `CanvasFlow` + `AiSidebar` together inside `RoomProvider` so sidebar has access to Liveblocks hooks
+  - `components/editor/workspace-chrome.tsx` — removed `AiSidebar` (now rendered inside room); simplified to just render `CanvasRoom`
+  - `components/editor/ai-sidebar.tsx` — `useEventListener` subscribes to `AI_PRESENCE` (sets `isGenerating`) and `AI_STATUS` (validates via `AiStatusPayloadSchema`, sets `statusText`, clears on complete/error); status strip shows spinner + latest message when AI is active; textarea disabled + placeholder changes when generating; send button shows `Loader2` spinner instead of `Send` icon when generating
+  - `components/editor/canvas-flow.tsx` — `CustomCursor` reads `other.presence.thinking` via second `useOther` call; shows `Loader2` spinner in cursor name badge when `thinking` is true
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 22 (spec: 22-design-agent-api.md): Design Agent API
+  - `prisma/models/project.prisma` — `TaskRun` model added with `runId` (unique), `projectId`, `userId`, `createdAt`; index on `runId`; compound index on `userId`+`projectId`; migration `20260602193520_add_task_run` applied
+  - `trigger/design-agent.ts` — `designAgent` task: accepts `{ prompt, roomId }`, logs both, echoes them back; follows existing task pattern
+  - `app/api/ai/design/route.ts` — `POST`: auth via `getCurrentIdentity`, validates `prompt`/`roomId`/`projectId`, checks project access via `getAccessibleProject`, triggers `design-agent` task, creates `TaskRun` record, returns `{ runId }`
+  - `app/api/ai/design/token/route.ts` — `POST`: auth via `getCurrentIdentity`, validates `runId`, verifies ownership via `TaskRun` lookup, generates Trigger.dev public token scoped to the run, returns `{ token }`
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 21 (spec: 21-canvas-autosave.md): Canvas Autosave
+  - `@vercel/blob` installed
+  - `app/api/projects/[projectId]/canvas/route.ts` — `PUT`: uploads canvas JSON to Vercel Blob at `canvas/{projectId}.json`, stores blob URL in Prisma `canvasJsonPath`; `GET`: reads blob URL from Prisma, fetches and returns canvas JSON; both routes use `getCurrentIdentity` + `getAccessibleProject` for auth
+  - `hooks/use-canvas-autosave.ts` — watches `nodes`/`edges`, debounces 2 s, calls `PUT /api/projects/{projectId}/canvas`, returns `SaveStatus` (`idle | saving | saved | error`)
+  - `components/editor/workspace-context.tsx` — added `saveStatus`, `setSaveStatus`, and `workspaceProject` to context shape and default value; re-exports `SaveStatus` type
+  - `components/editor/canvas-flow.tsx` — initial-load `useEffect` (runs once): if room is empty, fetches blob canvas and applies nodes/edges via `onNodesChange`/`onEdgesChange`; calls `useCanvasAutosave` and syncs status to context via `setSaveStatus`
+  - `components/editor/editor-navbar.tsx` — `SaveIndicator` component renders spinning loader / check / alert icon + text for each status; `saveStatus` prop added to `EditorNavbar`; indicator renders before the Templates button when in workspace
+  - `components/editor/editor-chrome.tsx` — `saveStatus`/`setSaveStatus` state added; both passed into `WorkspaceContext.Provider`; `workspaceProject` also surfaced in context; `saveStatus` forwarded to `EditorNavbar`
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 20 (spec: 20-ai-sidebar-shell.md): AI Sidebar Shell
+  - `components/editor/ai-sidebar.tsx` — new component: floating `<aside>` with slide-in animation, header (Bot icon, "AI Workspace" title, "Collaborate with Ghost AI" subtitle, close button), shadcn `Tabs` with "AI Architect" and "Specs" tabs; AI Architect tab has scrollable chat area with bot-icon empty state, 3 starter prompt chips, user/assistant message bubbles, auto-resizing `Textarea` + `Send` icon button; Specs tab has "Generate Spec" button and a static demo spec card with file icon, title, snippet, and disabled download action; active tab uses `bg-ai text-white`; all colors use project tokens
+  - `components/editor/workspace-chrome.tsx` — replaced inline placeholder `<aside>` with `<AiSidebar isOpen={isAISidebarOpen} onClose={toggleAISidebar} />`; removed unused `Ghost`/`Sparkles` imports
+  - TypeScript: zero errors, `npm run build` passes
+- Feature 19 (spec: 19-presence-avatars-cursors.md): Presence Avatars & Live Cursors
+  - `liveblocks.config.ts` — renamed `isThinking` → `thinking` in Presence type per spec
+  - `components/editor/canvas-room.tsx` — updated `initialPresence` to `{ cursor: null, thinking: false }`
+  - `components/editor/canvas-flow.tsx` — `CustomCursor` component renders a small colored SVG pointer + name badge pill (color from `UserMeta.info.color`); `PresenceAvatars` component (React Flow Panel top-right) shows a filtered collaborator avatar stack (up to 5 + overflow chip, ring via box-shadow, initials fallback) with a divider only when collaborators exist, plus Clerk `UserButton` for the current user; current user filtered via `useUser()` Clerk ID; `getInitials` utility for fallback labels
+  - TypeScript: zero errors, `npm run build` passes
 - Feature 18 (spec: 18-starter-templates.md): Starter Templates
   - `components/editor/starter-templates.ts` — `CanvasTemplate` type + `CANVAS_TEMPLATES` (Microservices, CI/CD Pipeline, Event-Driven System); each node uses shared `CanvasNode`/`CanvasEdge` types and `NODE_COLORS` palette; CI/CD uses 2-row layout for compact preview
   - `components/editor/starter-templates-modal.tsx` — `StarterTemplatesModal` dialog (`max-w-5xl`, fixed `grid-cols-3`); `TemplatePreview` SVG uses template's own coordinate space as dynamic `viewBox` + `width="100%"` so it fills the card at any size; `aspectRatio` set from actual bounds; edges as lines, nodes as shape-matched SVG elements
@@ -131,11 +187,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## In Progress
 
-- None.
+- (none)
 
 ## Next Up
 
-- Feature 19 (next feature spec)
+- (none)
 
 ## Open Questions
 

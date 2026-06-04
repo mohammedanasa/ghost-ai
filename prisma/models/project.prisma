@@ -14,9 +14,21 @@ model Project {
   updatedAt      DateTime      @updatedAt
 
   collaborators ProjectCollaborator[]
+  specs         ProjectSpec[]
 
   @@index([ownerId])
   @@index([createdAt])
+}
+
+model ProjectSpec {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  filePath  String
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+  @@index([projectId, createdAt])
 }
 
 model ProjectCollaborator {
@@ -29,4 +41,15 @@ model ProjectCollaborator {
   @@unique([projectId, email])
   @@index([email])
   @@index([projectId, createdAt])
+}
+
+model TaskRun {
+  id        String   @id @default(cuid())
+  runId     String   @unique
+  projectId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@index([runId])
+  @@index([userId, projectId])
 }
