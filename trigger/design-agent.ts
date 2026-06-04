@@ -57,8 +57,8 @@ export const designAgent = task({
   run: async (payload: { prompt: string; roomId: string }) => {
     const liveblocks = getLiveblocks()
 
-    async function broadcast(event: Record<string, unknown>) {
-      await liveblocks.broadcastEvent(payload.roomId, event as Liveblocks["RoomEvent"])
+    async function broadcast(event: Parameters<typeof liveblocks.broadcastEvent>[1]) {
+      await liveblocks.broadcastEvent(payload.roomId, event)
     }
 
     async function setAiPresence(thinking: boolean) {
@@ -154,11 +154,13 @@ export const designAgent = task({
               shape: z.enum(["rectangle", "diamond", "circle", "pill", "cylinder", "hexagon"]).optional(),
             }),
             execute: async ({ id, label, colorIndex, shape }) => {
-              const event: Record<string, unknown> = { type: "AI_UPDATE_NODE_DATA", id }
-              if (label !== undefined) event.label = label
-              if (colorIndex !== undefined) event.color = (NODE_COLORS[colorIndex] ?? NODE_COLORS[0]).fill
-              if (shape !== undefined) event.shape = shape
-              await broadcast(event)
+              await broadcast({
+                type: "AI_UPDATE_NODE_DATA",
+                id,
+                ...(label !== undefined && { label }),
+                ...(colorIndex !== undefined && { color: (NODE_COLORS[colorIndex] ?? NODE_COLORS[0]).fill }),
+                ...(shape !== undefined && { shape }),
+              })
               actionsApplied++
               return { success: true }
             },
@@ -183,9 +185,7 @@ export const designAgent = task({
               label: z.string().optional().describe("Optional edge label"),
             }),
             execute: async ({ id, source, target, label }) => {
-              const event: Record<string, unknown> = { type: "AI_ADD_EDGE", id, source, target }
-              if (label !== undefined) event.label = label
-              await broadcast(event)
+              await broadcast({ type: "AI_ADD_EDGE", id, source, target, ...(label !== undefined && { label }) })
               actionsApplied++
               return { success: true }
             },

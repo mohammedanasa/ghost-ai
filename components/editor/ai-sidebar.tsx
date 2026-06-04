@@ -424,7 +424,7 @@ export function AiSidebar({ isOpen, onClose }: AiSidebarProps) {
                   <span>{sendError}</span>
                 </div>
               )}
-              <div className="flex gap-2 items-end">
+              <div className="relative">
                 <Textarea
                   ref={textareaRef}
                   value={draft}
@@ -432,13 +432,13 @@ export function AiSidebar({ isOpen, onClose }: AiSidebarProps) {
                   onKeyDown={handleKeyDown}
                   disabled={isLoading}
                   placeholder={isLoading ? "AI is working…" : "Describe your architecture..."}
-                  className="flex-1 resize-none min-h-18 max-h-40 bg-subtle border-border-default text-copy-primary placeholder:text-copy-faint text-sm rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full resize-none min-h-18 max-h-40 bg-subtle border-border-default text-copy-primary placeholder:text-copy-faint text-sm rounded-xl disabled:opacity-50 disabled:cursor-not-allowed pr-12 pb-10"
                 />
                 <Button
                   onClick={handleSend}
                   disabled={!draft.trim() || isLoading}
                   size="icon"
-                  className="bg-[#62C073] text-[#0f2e18] hover:bg-[#62C073]/90 shrink-0 self-end"
+                  className="absolute bottom-2 right-2 h-8 w-8 bg-[#62C073] text-[#0f2e18] hover:bg-[#62C073]/90 shrink-0 rounded-lg"
                 >
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

@@ -420,10 +420,7 @@ export function CanvasFlow() {
         <DeleteKeyHandler onDelete={onDelete} />
         <Background variant={BackgroundVariant.Dots} />
         <Cursors components={{ Cursor: CustomCursor }} />
-        <Panel position="top-left" className="mt-2 ml-2">
-          <AiActivityPanel thinking={aiThinking} status={aiStatus} />
-        </Panel>
-        <Panel position="top-right" className="mt-2 mr-2">
+<Panel position="top-right" className="mt-2 mr-2">
           <PresenceAvatars />
         </Panel>
         <Panel position="bottom-left" className="mb-4 ml-4">
